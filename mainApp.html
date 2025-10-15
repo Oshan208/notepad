@@ -1,260 +1,257 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Notepad</title>
-    <style>
-        /* Your existing CSS styles here */
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-image: url('https://vauclusespring.com/wp-content/uploads/2016/12/hiking-in-northern-va.jpg');
-            background-size: cover;
-            background-position: center;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
-
-        .container {
-            max-width: 600px;
-            padding: 30px;
-            background-color: rgba(255, 255, 255, 0.9);
-            border-radius: 10px;
-            box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.2);
-        }
-
-        h2 {
-            text-align: center;
-            color: #333;
-            margin-bottom: 20px;
-        }
-
-        textarea {
-            width: 100%;
-            height: 200px;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            resize: vertical;
-            margin-bottom: 20px;
-            font-size: 16px;
-            color: #333;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: rgba(255, 255, 255, 0.7); /* Modified background color */
-        }
-
-        .button-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .button-container button {
-            padding: 10px 20px;
-            background-color: #007bff;
-            color: #fff;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-
-        .button-container button:hover {
-            background-color: #0056b3;
-        }
-
-        .file-list {
-            margin-top: 20px;
-        }
-
-        .file-list h3 {
-            color: #333;
-            font-size: 18px;
-            margin-bottom: 10px;
-        }
-
-        .file-list ul {
-            padding: 0;
-            margin: 0;
-            list-style-type: none;
-        }
-
-        .file-list-item {
-            cursor: pointer;
-            margin-bottom: 5px;
-            color: #007bff;
-            font-size: 14px;
-            transition: color 0.3s;
-        }
-
-        .file-list-item:hover {
-            text-decoration: underline;
-            color: #0056b3;
-        }
-
-        .error-message {
-            color: red;
-            font-size: 14px;
-            margin-top: 5px;
-        }
-
-        label {
-            font-size: 16px;
-            color: #333;
-            margin-right: 10px;
-        }
-
-        select, input[type="color"], input[type="number"] {
-            font-size: 16px;
-            padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
-
-        .file-container {
-            margin-top: 20px;
-            border: 1px solid #ccc;
-            padding: 10px;
-            border-radius: 5px;
-            background-color: #f9f9f9;
-            position: relative;
-        }
-
-        .file-container h3 {
-            color: #333;
-            margin-bottom: 10px;
-        }
-
-        .file-content {
-            white-space: pre-wrap;
-        }
-
-        .remove-button {
-            background-color: #dc3545;
-            color: #fff;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 5px;
-            cursor: pointer;
-            position: absolute;
-            top: 10px;
-            right: 10px;
-        }
-
-        .remove-button:hover {
-            background-color: #c82333;
-        }
-    </style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Advanced Person Identifying System — Demo</title>
+  <style>
+    body{font-family:Inter,system-ui,Segoe UI,Roboto,Arial;margin:0;background:#0f172a;color:#e6eef8;display:flex;gap:20px;padding:20px}
+    .card{background:#0b1220;border-radius:12px;padding:16px;box-shadow:0 6px 20px rgba(2,6,23,0.6);}
+    #area{display:flex;gap:16px}
+    video, canvas {width:480px;height:360px;border-radius:8px;background:#000;object-fit:cover}
+    .controls{display:flex;flex-direction:column;gap:8px}
+    button{padding:10px;border-radius:8px;border:0;background:#2563eb;color:white;cursor:pointer}
+    input{padding:8px;border-radius:6px;border:1px solid #223; background:#071028;color:#dfe}
+    small{color:#9fb0d1}
+    #profiles{max-height:360px;overflow:auto;margin-top:8px}
+    .profile{padding:8px;border-radius:6px;background:#07102a;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center}
+    .virtualFace{width:200px;height:200px;background:#061024;border-radius:12px}
+  </style>
 </head>
 <body>
-<div class="container">
-    <h2>Notepad</h2>
-    <form id="noteForm">
-        <textarea id="noteText" placeholder="Enter your note here"></textarea>
-        <div id="errorMessage" class="error-message" style="display: none;">Please Type Anything to Save !</div>
-        <div class="button-container">
-            <label for="fileInput" class="button">Open</label>
-            <input type="file" id="fileInput" accept=".txt" multiple onchange="handleFileSelect(event)">
-            <button type="button" onclick="saveNote()">Save Note</button>
-        </div>
-        <div class="file-list">
-            <h3>Last 10 Files</h3>
-            <ul id="lastFilesList"></ul>
-        </div>
-        <button type="button" onclick="clearData()" style="margin-top: 20px;">Clear Data</button>
-    </form>
+  <div class="card" id="area">
     <div>
-        <label for="colorSelect">Text Color:</label>
-        <input type="color" id="colorSelect" onchange="changeColor()">
+      <video id="video" autoplay muted playsinline></video>
+      <canvas id="overlay"></canvas>
+      <div style="margin-top:8px;display:flex;gap:8px;align-items:center">
+        <button id="btnStart">Start Camera</button>
+        <button id="btnScan">Scan & Match</button>
+        <button id="btnSave">Scan & Save New</button>
+        <input id="nameInput" placeholder="name (optional)" />
+      </div>
+      <small>Tip: allow camera, then click Scan or Scan & Save. Models load once at start.</small>
     </div>
-    <div>
-        <label for="fontSelect">Font Family:</label>
-        <select id="fontSelect" onchange="changeFont()">
-            <option value="'Segoe UI', Tahoma, Geneva, Verdana, sans-serif">Segoe UI</option>
-            <option value="Arial, sans-serif">Arial</option>
-            <option value="Verdana, sans-serif">Verdana</option>
-            <option value="Georgia, serif">Georgia</option>
-        </select>
+
+    <div style="min-width:300px">
+      <div class="card" style="margin-bottom:12px">
+        <h3>Match Result</h3>
+        <div id="result">No scans yet.</div>
+        <h4 style="margin-top:12px">Virtual Face</h4>
+        <canvas id="virtual" class="virtualFace"></canvas>
+      </div>
+
+      <div class="card">
+        <h3>Saved Profiles</h3>
+        <div id="profiles"></div>
+        <button id="clearAll">Clear All Profiles</button>
+      </div>
     </div>
-    <div>
-        <label for="sizeSelect">Font Size:</label>
-        <input type="number" id="sizeSelect" min="8" max="72" value="16" onchange="changeSize()">
-    </div>
-</div>
+  </div>
 
-<script>
-    let openedFiles = {};
+  <!-- face-api.js (from unpkg) -->
+  <script defer src="https://unpkg.com/face-api.js@0.22.2/dist/face-api.min.js"></script>
+  <script>
+    // Configuration
+    const MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models'; // public host for demo only. For production host models yourself.
+    const MATCH_THRESHOLD = 0.55; // lower = stricter. Tweak 0.45..0.7
 
-    function changeColor() {
-        var color = document.getElementById("colorSelect").value;
-        document.getElementById("noteText").style.color = color;
+    // Elements
+    const video = document.getElementById('video');
+    const overlay = document.getElementById('overlay');
+    const ctx = overlay.getContext('2d');
+    const btnStart = document.getElementById('btnStart');
+    const btnScan = document.getElementById('btnScan');
+    const btnSave = document.getElementById('btnSave');
+    const nameInput = document.getElementById('nameInput');
+    const resultDiv = document.getElementById('result');
+    const profilesDiv = document.getElementById('profiles');
+    const virtualCanvas = document.getElementById('virtual');
+    const vctx = virtualCanvas.getContext('2d');
+    const clearAll = document.getElementById('clearAll');
+
+    let stream = null;
+    let modelsLoaded = false;
+
+    // Utility: store / load descriptors in localStorage
+    function saveProfile(name, descriptor){
+      const profiles = loadProfiles();
+      const id = 'p_' + Date.now();
+      profiles.push({id, name: name || 'Person ' + (profiles.length+1), descriptor:Array.from(descriptor)});
+      localStorage.setItem('face_profiles_v1', JSON.stringify(profiles));
+      renderProfiles();
     }
-
-    function changeFont() {
-        var font = document.getElementById("fontSelect").value;
-        document.getElementById("noteText").style.fontFamily = font;
+    function loadProfiles(){
+      const raw = localStorage.getItem('face_profiles_v1');
+      if(!raw) return [];
+      try{ return JSON.parse(raw);}catch(e){ return []; }
     }
-
-    function changeSize() {
-        var size = document.getElementById("sizeSelect").value + "px";
-        document.getElementById("noteText").style.fontSize = size;
-    }
-
-    function handleFileSelect(event) {
-        const files = event.target.files;
-
-        for (let i = 0; i < files.length; i++) {
-            const file = files[i];
-            const reader = new FileReader();
-
-            reader.onload = function(e) {
-                const fileContent = e.target.result;
-                openedFiles[file.name] = fileContent;
-                updateLastFilesList(file.name);
-                if (i === files.length - 1) {
-                    document.getElementById("noteText").value = fileContent;
-                }
-            };
-
-            reader.readAsText(file);
-        }
-    }
-
-    function saveNote() {
-        const noteText = document.getElementById("noteText").value.trim();
-
-        if (noteText === "") {
-            document.getElementById("errorMessage").style.display = "block";
-            return;
-        }
-
-        const blob = new Blob([noteText], { type: "text/plain;charset=utf-8" });
-        saveAs(blob, "NOTEFILE.txt");
-        document.getElementById("errorMessage").style.display = "none";
-    }
-
-    function updateLastFilesList(fileName) {
-        const lastFilesList = document.getElementById("lastFilesList");
-        const listItem = document.createElement("li");
-        listItem.textContent = fileName;
-        listItem.addEventListener("click", function() {
-            document.getElementById("noteText").value = openedFiles[fileName];
+    function clearProfiles(){ localStorage.removeItem('face_profiles_v1'); renderProfiles(); }
+    function renderProfiles(){
+      const profiles = loadProfiles();
+      profilesDiv.innerHTML = '';
+      if(profiles.length===0) profilesDiv.innerHTML = '<small>No profiles saved yet.</small>';
+      profiles.forEach(p=>{
+        const el = document.createElement('div'); el.className='profile';
+        el.innerHTML = `<div><strong>${escapeHtml(p.name)}</strong><div style="font-size:11px;color:#9fb0d1">${p.id}</div></div>`;
+        const btnDel = document.createElement('button'); btnDel.textContent='Delete'; btnDel.style.background='#ef4444'; btnDel.addEventListener('click',()=>{
+          const list = loadProfiles().filter(x=>x.id!==p.id); localStorage.setItem('face_profiles_v1', JSON.stringify(list)); renderProfiles();
         });
-        lastFilesList.appendChild(listItem);
-
-        if (lastFilesList.children.length > 10) {
-            lastFilesList.removeChild(lastFilesList.children[0]);
-        }
+        el.appendChild(btnDel);
+        profilesDiv.appendChild(el);
+      });
     }
 
-    function clearData() {
-        document.getElementById("noteText").value = "";
-        document.getElementById("lastFilesList").innerHTML = "";
+    function escapeHtml(s){ return (s+'').replace(/[&<>"]/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c])); }
+
+    // Start camera
+    async function startCamera(){
+      if(stream) return;
+      try{
+        stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'}, audio:false});
+        video.srcObject = stream;
+        await video.play();
+        overlay.width = video.videoWidth || 480; overlay.height = video.videoHeight || 360;
+      }catch(e){ alert('Camera error: '+e.message); }
     }
-</script>
+
+    // Load face-api models
+    async function loadModels(){
+      if(modelsLoaded) return;
+      resultDiv.innerText = 'Loading models...';
+      await Promise.all([
+        faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+        faceapi.nets.faceLandmark68TinyNet.loadFromUri(MODEL_URL),
+        faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
+        faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL) // optional, backup detector
+      ]);
+      modelsLoaded = true;
+      resultDiv.innerText = 'Models loaded. Ready.';
+    }
+
+    // Run a single scan & return detection
+    async function scanOnce(){
+      if(!modelsLoaded) await loadModels();
+      if(!stream) await startCamera();
+      // draw current video frame to temp canvas
+      const input = faceapi.createCanvasFromMedia(video);
+      // options: tiny detector is faster
+      const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks(true).withFaceDescriptor();
+      return detection;
+    }
+
+    // draw overlay
+    function drawDetection(d){
+      ctx.clearRect(0,0,overlay.width,overlay.height);
+      if(!d) return;
+      const box = d.detection.box;
+      ctx.strokeStyle='#1de9b6'; ctx.lineWidth=2; ctx.strokeRect(box.x,box.y,box.width,box.height);
+      // landmarks
+      ctx.fillStyle='#ffd166';
+      d.landmarks.positions.forEach(p=>{ ctx.beginPath(); ctx.arc(p.x,p.y,2,0,Math.PI*2); ctx.fill(); });
+    }
+
+    // compute euclidean distance
+    function distance(d1,d2){
+      let sum=0; for(let i=0;i<d1.length;i++){ const diff=d1[i]-d2[i]; sum+=diff*diff; } return Math.sqrt(sum);
+    }
+
+    function findBestMatch(descriptor){
+      const profiles = loadProfiles();
+      if(profiles.length===0) return null;
+      let best = null; let bestDist = Infinity;
+      profiles.forEach(p=>{
+        const dist = distance(descriptor, p.descriptor);
+        if(dist < bestDist){ bestDist = dist; best = {profile:p, dist}; }
+      });
+      return {best, threshold:MATCH_THRESHOLD};
+    }
+
+    // draw virtual face (stylized) from landmarks
+    function drawVirtualFace(landmarks){
+      // landmarks: faceapi.FaceLandmarks68
+      vctx.clearRect(0,0,virtualCanvas.width,virtualCanvas.height);
+      // background
+      vctx.fillStyle='#071028'; vctx.fillRect(0,0,virtualCanvas.width,virtualCanvas.height);
+      // center transform
+      vctx.save(); vctx.translate(virtualCanvas.width/2, virtualCanvas.height/2);
+      vctx.scale(0.9,0.9);
+      // compute simple face oval
+      const pts = landmarks.positions;
+      // approximate face outline using jaw points 0..16
+      const jaw = pts.slice(0,17).map(p=>({x:p.x,y:p.y}));
+      // normalize coordinates to center and scale
+      const bbox = landmarks.align ? null : true; // unused but placeholder
+      // map to canvas coords
+      // center of face = landmark nose tip (index 30)
+      const cx = pts[30].x; const cy = pts[30].y;
+      // compute scale from distance between eyes
+      const leftEye = pts[36]; const rightEye = pts[45];
+      const eyeDist = Math.hypot(leftEye.x-rightEye.x,leftEye.y-rightEye.y);
+      const scale = 1.2 * (virtualCanvas.width/ (eyeDist*4));
+
+      // draw face oval
+      vctx.fillStyle = '#ffd9a8'; vctx.beginPath();
+      vctx.ellipse(0,0,60*scale,80*scale,0,0,Math.PI*2); vctx.fill();
+
+      // eyes
+      vctx.fillStyle='#0e1724';
+      const eyeY = -10*scale; const eyeXoff = 16*scale;
+      vctx.beginPath(); vctx.ellipse(-eyeXoff,eyeY,8*scale,6*scale,0,0,Math.PI*2); vctx.fill();
+      vctx.beginPath(); vctx.ellipse(eyeXoff,eyeY,8*scale,6*scale,0,0,Math.PI*2); vctx.fill();
+      // mouth
+      vctx.fillStyle='#8b3e2f'; vctx.beginPath(); vctx.ellipse(0,24*scale,18*scale,8*scale,0,0,Math.PI); vctx.fill();
+
+      // draw simplified hair using top landmarks
+      vctx.fillStyle='#2b2b2b'; vctx.beginPath(); vctx.ellipse(0,-60*scale,80*scale,40*scale,0,0,Math.PI*2); vctx.fill();
+      vctx.restore();
+    }
+
+    // Button handlers
+    btnStart.addEventListener('click', async ()=>{
+      btnStart.disabled = true; await startCamera(); await loadModels(); btnStart.disabled = false;
+    });
+
+    btnScan.addEventListener('click', async ()=>{
+      resultDiv.innerText = 'Scanning...';
+      const d = await scanOnce();
+      drawDetection(d);
+      if(!d){ resultDiv.innerText = 'No face detected'; return; }
+      const match = findBestMatch(d.descriptor);
+      if(!match || !match.best){ resultDiv.innerHTML = `<strong>No profiles stored</strong>`; drawVirtualFace(d.landmarks); return; }
+      const {profile, dist} = match.best;
+      if(dist <= match.threshold){
+        resultDiv.innerHTML = `<strong>Matched:</strong> ${escapeHtml(profile.name)} <div style="font-size:12px;color:#9fb0d1">ID: ${profile.id} (dist=${dist.toFixed(3)})</div>`;
+      }else{
+        resultDiv.innerHTML = `<strong>No match (closest:</strong> ${escapeHtml(profile.name)} dist=${dist.toFixed(3)})`;
+      }
+      drawVirtualFace(d.landmarks);
+    });
+
+    btnSave.addEventListener('click', async ()=>{
+      const name = nameInput.value.trim();
+      resultDiv.innerText = 'Scanning to save...';
+      const d = await scanOnce();
+      drawDetection(d);
+      if(!d){ resultDiv.innerText = 'No face detected'; return; }
+      saveProfile(name, d.descriptor);
+      resultDiv.innerHTML = `<strong>Saved</strong> ${escapeHtml(name || 'Person')}`;
+      drawVirtualFace(d.landmarks);
+    });
+
+    clearAll.addEventListener('click', ()=>{ if(confirm('Clear all saved profiles?')){ clearProfiles(); } });
+
+    // initialize
+    (function init(){
+      overlay.width = 480; overlay.height = 360; virtualCanvas.width=200; virtualCanvas.height=200;
+      renderProfiles();
+      // optional: preload models silently
+      loadModels().catch(e=>{
+        console.warn('Model load failed:',e); resultDiv.innerText='Model load failed. Check network or host models locally.';
+      });
+    })();
+
+    // handle page visibility: stop camera when leaving
+    window.addEventListener('beforeunload', ()=>{ if(stream){stream.getTracks().forEach(t=>t.stop());}});
+  </script>
 </body>
 </html>
