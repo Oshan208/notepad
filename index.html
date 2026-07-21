@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mata Online Calling</title>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 400px;
+            width: 100%;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #667eea;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e1e1;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+            margin-bottom: 10px;
+        }
+
+        .btn:hover {
+            background: #5a67d8;
+        }
+
+        .btn-secondary {
+            background: #48bb78;
+        }
+
+        .btn-secondary:hover {
+            background: #38a169;
+        }
+
+        .btn-danger {
+            background: #f56565;
+        }
+
+        .btn-danger:hover {
+            background: #e53e3e;
+        }
+
+        .btn-warning {
+            background: #ed8936;
+        }
+
+        .btn-warning:hover {
+            background: #dd6b20;
+        }
+
+        .user-info {
+            background: #f7fafc;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .unique-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+            margin: 10px 0;
+        }
+
+        .dialer {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .dial-btn {
+            padding: 15px;
+            background: #f7fafc;
+            border: 2px solid #e1e1e1;
+            border-radius: 10px;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .dial-btn:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .number-display {
+            background: #f7fafc;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 24px;
+            text-align: center;
+            margin: 20px 0;
+            letter-spacing: 2px;
+        }
+
+        .incoming-call {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            margin: 20px 0;
+            display: none;
+        }
+
+        .incoming-call.active {
+            display: block;
+            animation: pulse 1.5s infinite;
+        }
+
+        .active-call {
+            background: #c6f6d5;
+            border: 2px solid #48bb78;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            margin: 20px 0;
+            display: none;
+        }
+
+        .active-call.active {
+            display: block;
+        }
+
+        .call-timer {
+            font-size: 32px;
+            font-weight: bold;
+            color: #22543d;
+            margin: 15px 0;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .call-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 15px;
+        }
+
+        .call-actions .btn {
+            width: auto;
+            padding: 10px 30px;
+        }
+
+        .error-message {
+            color: #f56565;
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .link-text {
+            text-align: center;
+            margin-top: 15px;
+            color: #666;
+        }
+
+        .link-text a {
+            color: #667eea;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+
+        .status-ringing {
+            background: #ffc107;
+            animation: blink 1s infinite;
+        }
+
+        .status-connected {
+            background: #48bb78;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Register Screen -->
+        <div id="registerScreen" class="screen active">
+            <div class="header">
+                <h1>📞 Mata Online Calling</h1>
+                <p>Create your account and get a unique number</p>
+            </div>
+            <div class="input-group">
+                <label>Email</label>
+                <input type="email" id="regEmail" placeholder="Enter your email">
+            </div>
+            <div class="input-group">
+                <label>Password</label>
+                <input type="password" id="regPassword" placeholder="Enter password">
+            </div>
+            <div class="input-group">
+                <label>Name</label>
+                <input type="text" id="regName" placeholder="Enter your name">
+            </div>
+            <p class="error-message" id="regError"></p>
+            <button class="btn" onclick="register()">Register</button>
+            <p class="link-text">Already have an account? <a onclick="showScreen('loginScreen')">Login</a></p>
+        </div>
+
+        <!-- Login Screen -->
+        <div id="loginScreen" class="screen">
+            <div class="header">
+                <h1>📞 Welcome Back</h1>
+                <p>Login to your account</p>
+            </div>
+            <div class="input-group">
+                <label>Email</label>
+                <input type="email" id="loginEmail" placeholder="Enter your email">
+            </div>
+            <div class="input-group">
+                <label>Password</label>
+                <input type="password" id="loginPassword" placeholder="Enter password">
+            </div>
+            <p class="error-message" id="loginError"></p>
+            <button class="btn" onclick="login()">Login</button>
+            <p class="link-text">Don't have an account? <a onclick="showScreen('registerScreen')">Register</a></p>
+        </div>
+
+        <!-- Main Screen -->
+        <div id="mainScreen" class="screen">
+            <div class="header">
+                <h1>📞 Mata Online Calling</h1>
+            </div>
+            <div class="user-info">
+                <p>Welcome, <strong id="userName"></strong></p>
+                <p>Your Number:</p>
+                <div class="unique-number" id="userNumber">0120000000</div>
+            </div>
+            
+            <!-- Incoming Call Alert -->
+            <div class="incoming-call" id="incomingCall">
+                <h3>📲 Incoming Call</h3>
+                <p>From: <strong id="callerNumber"></strong></p>
+                <p><span class="status-indicator status-ringing"></span> Ringing...</p>
+                <div class="call-actions">
+                    <button class="btn btn-secondary" onclick="answerCall()">✅ Answer</button>
+                    <button class="btn btn-danger" onclick="rejectCall()">❌ Reject</button>
+                </div>
+            </div>
+
+            <!-- Active Call Screen -->
+            <div class="active-call" id="activeCall">
+                <h3>🔊 Call in Progress</h3>
+                <p>With: <strong id="activeCallNumber"></strong></p>
+                <p><span class="status-indicator status-connected"></span> Connected</p>
+                <div class="call-timer" id="callTimer">00:00</div>
+                <div class="call-actions">
+                    <button class="btn btn-danger" onclick="endCall()">📞 End Call</button>
+                </div>
+            </div>
+
+            <!-- Dialer (hidden during calls) -->
+            <div id="dialerSection">
+                <div class="number-display" id="dialDisplay"></div>
+                <div class="dialer">
+                    <button class="dial-btn" onclick="addDigit('1')">1</button>
+                    <button class="dial-btn" onclick="addDigit('2')">2</button>
+                    <button class="dial-btn" onclick="addDigit('3')">3</button>
+                    <button class="dial-btn" onclick="addDigit('4')">4</button>
+                    <button class="dial-btn" onclick="addDigit('5')">5</button>
+                    <button class="dial-btn" onclick="addDigit('6')">6</button>
+                    <button class="dial-btn" onclick="addDigit('7')">7</button>
+                    <button class="dial-btn" onclick="addDigit('8')">8</button>
+                    <button class="dial-btn" onclick="addDigit('9')">9</button>
+                    <button class="dial-btn" onclick="addDigit('*')">*</button>
+                    <button class="dial-btn" onclick="addDigit('0')">0</button>
+                    <button class="dial-btn" onclick="addDigit('#')">#</button>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn btn-secondary" onclick="makeCall()">📞 Call</button>
+                    <button class="btn btn-danger" onclick="clearDisplay()">Clear</button>
+                </div>
+            </div>
+            
+            <button class="btn" onclick="logout()" style="margin-top: 10px;">Logout</button>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyDLSnWPSjF8Qf2mQ9zc2HfvpTH8dPzIrL8",
+            authDomain: "demobatta-1b673.firebaseapp.com",
+            databaseURL: "https://demobatta-1b673-default-rtdb.firebaseio.com",
+            projectId: "demobatta-1b673",
+            storageBucket: "demobatta-1b673.firebasestorage.app",
+            messagingSenderId: "609366383941",
+            appId: "1:609366383941:web:11f782595e3bd4f855722c"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const database = firebase.database();
+
+        let currentUser = null;
+        let currentUserNumber = null;
+        let incomingCallRef = null;
+        let activeCallData = null;
+        let callTimerInterval = null;
+        let callStartTime = null;
+
+        // WebRTC Configuration
+        const peerConnectionConfig = {
+            iceServers: [
+                { urls: 'stun:stun.l.google.com:19302' },
+                { urls: 'stun:stun1.l.google.com:19302' }
+            ]
+        };
+
+        let localStream = null;
+        let peerConnection = null;
+
+        // Generate unique number (012XXXXXXX)
+        function generateUniqueNumber() {
+            const randomPart = Math.floor(1000000 + Math.random() * 9000000);
+            return '012' + randomPart.toString();
+        }
+
+        // Screen navigation
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        // Initialize local media
+        async function initializeMedia() {
+            try {
+                localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+                console.log('Microphone access granted');
+                return true;
+            } catch (error) {
+                console.error('Error accessing media devices:', error);
+                alert('Please allow microphone access to make calls');
+                return false;
+            }
+        }
+
+        // Create Peer Connection
+        function createPeerConnection() {
+            peerConnection = new RTCPeerConnection(peerConnectionConfig);
+            
+            // Add local stream
+            if (localStream) {
+                localStream.getTracks().forEach(track => {
+                    peerConnection.addTrack(track, localStream);
+                });
+            }
+
+            // Handle ICE candidates
+            peerConnection.onicecandidate = (event) => {
+                if (event.candidate && activeCallData) {
+                    database.ref('calls/' + activeCallData.targetNumber + '/' + activeCallData.callId + '/iceCandidates').push({
+                        candidate: event.candidate,
+                        from: currentUserNumber
+                    });
+                }
+            };
+
+            // Handle remote stream
+            peerConnection.ontrack = (event) => {
+                // Create audio element for remote stream
+                const remoteAudio = new Audio();
+                remoteAudio.srcObject = event.streams[0];
+                remoteAudio.play();
+                console.log('Remote stream received');
+            };
+
+            return peerConnection;
+        }
+
+        // Register
+        async function register() {
+            const email = document.getElementById('regEmail').value;
+            const password = document.getElementById('regPassword').value;
+            const name = document.getElementById('regName').value;
+            const errorElement = document.getElementById('regError');
+
+            if (!email || !password || !name) {
+                errorElement.textContent = 'Please fill all fields';
+                errorElement.style.display = 'block';
+                return;
+            }
+
+            try {
+                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                const user = userCredential.user;
+                
+                let uniqueNumber = generateUniqueNumber();
+                
+                const numberSnapshot = await database.ref('numbers/' + uniqueNumber).once('value');
+                while (numberSnapshot.exists()) {
+                    uniqueNumber = generateUniqueNumber();
+                }
+
+                await database.ref('users/' + user.uid).set({
+                    email: email,
+                    name: name,
+                    uniqueNumber: uniqueNumber,
+                    createdAt: firebase.database.ServerValue.TIMESTAMP
+                });
+
+                await database.ref('numbers/' + uniqueNumber).set({
+                    userId: user.uid,
+                    name: name
+                });
+
+                const mediaReady = await initializeMedia();
+                if (!mediaReady) {
+                    alert('Microphone access is required for calls');
+                }
+
+                alert('Registration successful! Your number is: ' + uniqueNumber);
+                showScreen('mainScreen');
+                loadMainScreen(user);
+            } catch (error) {
+                errorElement.textContent = error.message;
+                errorElement.style.display = 'block';
+            }
+        }
+
+        // Login
+        async function login() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const errorElement = document.getElementById('loginError');
+
+            if (!email || !password) {
+                errorElement.textContent = 'Please fill all fields';
+                errorElement.style.display = 'block';
+                return;
+            }
+
+            try {
+                const userCredential = await auth.signInWithEmailAndPassword(email, password);
+                const mediaReady = await initializeMedia();
+                if (!mediaReady) {
+                    alert('Microphone access is required for calls');
+                }
+                showScreen('mainScreen');
+                loadMainScreen(userCredential.user);
+            } catch (error) {
+                errorElement.textContent = error.message;
+                errorElement.style.display = 'block';
+            }
+        }
+
+        // Load main screen
+        async function loadMainScreen(user) {
+            currentUser = user;
+            
+            const userSnapshot = await database.ref('users/' + user.uid).once('value');
+            const userData = userSnapshot.val();
+            
+            if (userData) {
+                currentUserNumber = userData.uniqueNumber;
+                document.getElementById('userName').textContent = userData.name;
+                document.getElementById('userNumber').textContent = currentUserNumber;
+                
+                listenForIncomingCalls();
+            }
+        }
+
+        // Listen for incoming calls
+        function listenForIncomingCalls() {
+            if (incomingCallRef) {
+                database.ref('calls/' + currentUserNumber).off();
+            }
+            
+            incomingCallRef = database.ref('calls/' + currentUserNumber);
+            incomingCallRef.on('child_added', (snapshot) => {
+                const callData = snapshot.val();
+                if (callData && callData.status === 'ringing') {
+                    showIncomingCall(callData.from, callData.callerName, snapshot.key);
+                }
+            });
+        }
+
+        // Show incoming call
+        function showIncomingCall(fromNumber, callerName, callId) {
+            document.getElementById('callerNumber').textContent = fromNumber + ' (' + callerName + ')';
+            document.getElementById('incomingCall').classList.add('active');
+            document.getElementById('incomingCall').dataset.callId = callId;
+            document.getElementById('incomingCall').dataset.fromNumber = fromNumber;
+            document.getElementById('dialerSection').style.display = 'none';
+        }
+
+        // Answer call
+        async function answerCall() {
+            const callId = document.getElementById('incomingCall').dataset.callId;
+            const fromNumber = document.getElementById('incomingCall').dataset.fromNumber;
+            
+            document.getElementById('incomingCall').classList.remove('active');
+            
+            // Create peer connection
+            createPeerConnection();
+            
+            // Listen for offer from caller
+            const offerRef = database.ref('calls/' + currentUserNumber + '/' + callId + '/offer');
+            offerRef.on('value', async (snapshot) => {
+                const offer = snapshot.val();
+                if (offer && peerConnection) {
+                    await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+                    const answer = await peerConnection.createAnswer();
+                    await peerConnection.setLocalDescription(answer);
+                    
+                    // Send answer
+                    await database.ref('calls/' + currentUserNumber + '/' + callId + '/answer').set({
+                        sdp: answer,
+                        from: currentUserNumber
+                    });
+                }
+            });
+
+            // Listen for ICE candidates
+            database.ref('calls/' + currentUserNumber + '/' + callId + '/iceCandidates').on('child_added', async (snapshot) => {
+                const data = snapshot.val();
+                if (data && data.from !== currentUserNumber && peerConnection) {
+                    await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
+                }
+            });
+
+            // Update call status
+            await database.ref('calls/' + currentUserNumber + '/' + callId).update({
+                status: 'answered'
+            });
+
+            // Show active call screen
+            startActiveCall(fromNumber, callId, true);
+        }
+
+        // Reject call
+        async function rejectCall() {
+            const callId = document.getElementById('incomingCall').dataset.callId;
+            
+            await database.ref('calls/' + currentUserNumber + '/' + callId).update({
+                status: 'rejected'
+            });
+            
+            document.getElementById('incomingCall').classList.remove('active');
+            document.getElementById('dialerSection').style.display = 'block';
+            
+            setTimeout(() => {
+                database.ref('calls/' + currentUserNumber + '/' + callId).remove();
+            }, 1000);
+        }
+
+        // Start active call display
+        function startActiveCall(remoteNumber, callId, isIncoming) {
+            activeCallData = {
+                targetNumber: remoteNumber,
+                callId: callId,
+                isIncoming: isIncoming
+            };
+
+            document.getElementById('activeCallNumber').textContent = remoteNumber;
+            document.getElementById('activeCall').classList.add('active');
+            document.getElementById('dialerSection').style.display = 'none';
+            
+            // Start timer
+            callStartTime = Date.now();
+            updateCallTimer();
+            callTimerInterval = setInterval(updateCallTimer, 1000);
+        }
+
+        // Update call timer
+        function updateCallTimer() {
+            if (callStartTime) {
+                const elapsed = Math.floor((Date.now() - callStartTime) / 1000);
+                const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
+                const seconds = (elapsed % 60).toString().padStart(2, '0');
+                document.getElementById('callTimer').textContent = minutes + ':' + seconds;
+            }
+        }
+
+        // End call
+        async function endCall() {
+            if (!activeCallData) return;
+
+            // Close peer connection
+            if (peerConnection) {
+                peerConnection.close();
+                peerConnection = null;
+            }
+
+            // Stop timer
+            if (callTimerInterval) {
+                clearInterval(callTimerInterval);
+                callTimerInterval = null;
+            }
+
+            // Calculate call duration
+            const duration = callStartTime ? Math.floor((Date.now() - callStartTime) / 1000) : 0;
+            const minutes = Math.floor(duration / 60);
+            const seconds = duration % 60;
+            const durationText = minutes + 'm ' + seconds + 's';
+
+            // Update Firebase
+            const callPath = activeCallData.isIncoming ? 
+                'calls/' + currentUserNumber + '/' + activeCallData.callId :
+                'calls/' + activeCallData.targetNumber + '/' + activeCallData.callId;
+
+            await database.ref(callPath).update({
+                status: 'ended',
+                duration: durationText,
+                endedBy: currentUserNumber
+            });
+
+            // Clean up
+            setTimeout(() => {
+                database.ref(callPath).remove();
+            }, 1000);
+
+            // Reset UI
+            document.getElementById('activeCall').classList.remove('active');
+            document.getElementById('dialerSection').style.display = 'block';
+            document.getElementById('callTimer').textContent = '00:00';
+            activeCallData = null;
+            callStartTime = null;
+
+            alert('Call ended. Duration: ' + durationText);
+        }
+
+        // Dialer functions
+        function addDigit(digit) {
+            const display = document.getElementById('dialDisplay');
+            display.textContent += digit;
+        }
+
+        function clearDisplay() {
+            document.getElementById('dialDisplay').textContent = '';
+        }
+
+        // Make call
+        async function makeCall() {
+            const targetNumber = document.getElementById('dialDisplay').textContent;
+            
+            if (!targetNumber) {
+                alert('Please enter a number');
+                return;
+            }
+
+            if (targetNumber === currentUserNumber) {
+                alert('You cannot call yourself');
+                return;
+            }
+
+            const numberSnapshot = await database.ref('numbers/' + targetNumber).once('value');
+            if (!numberSnapshot.exists()) {
+                alert('Number not found');
+                return;
+            }
+
+            const targetData = numberSnapshot.val();
+            const userSnapshot = await database.ref('users/' + currentUser.uid).once('value');
+            const userData = userSnapshot.val();
+
+            // Create call
+            const callRef = database.ref('calls/' + targetNumber).push();
+            const callId = callRef.key;
+
+            // Create peer connection
+            createPeerConnection();
+
+            // Create offer
+            const offer = await peerConnection.createOffer();
+            await peerConnection.setLocalDescription(offer);
+
+            await callRef.set({
+                from: currentUserNumber,
+                callerName: userData.name,
+                status: 'ringing',
+                offer: {
+                    sdp: offer,
+                    from: currentUserNumber
+                },
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            });
+
+            // Listen for answer
+            database.ref('calls/' + targetNumber + '/' + callId + '/answer').on('value', async (snapshot) => {
+                const answer = snapshot.val();
+                if (answer && peerConnection) {
+                    await peerConnection.setRemoteDescription(new RTCSessionDescription(answer.sdp));
+                    startActiveCall(targetNumber, callId, false);
+                }
+            });
+
+            // Listen for ICE candidates
+            database.ref('calls/' + targetNumber + '/' + callId + '/iceCandidates').on('child_added', async (snapshot) => {
+                const data = snapshot.val();
+                if (data && data.from !== currentUserNumber && peerConnection) {
+                    await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
+                }
+            });
+
+            // Listen for call status changes
+            database.ref('calls/' + targetNumber + '/' + callId + '/status').on('value', (snapshot) => {
+                const status = snapshot.val();
+                if (status === 'rejected') {
+                    alert('Call rejected');
+                    cleanupCall(targetNumber, callId);
+                } else if (status === 'ended') {
+                    alert('Call ended by remote user');
+                    cleanupCall(targetNumber, callId);
+                }
+            });
+
+            document.getElementById('dialerSection').style.display = 'none';
+            document.getElementById('activeCall').classList.add('active');
+            document.getElementById('activeCallNumber').textContent = targetNumber;
+            
+            // Start timer for ringing
+            callStartTime = Date.now();
+            updateCallTimer();
+            callTimerInterval = setInterval(updateCallTimer, 1000);
+
+            activeCallData = {
+                targetNumber: targetNumber,
+                callId: callId,
+                isIncoming: false
+            };
+
+            // Timeout after 30 seconds
+            setTimeout(() => {
+                if (activeCallData && activeCallData.callId === callId && !peerConnection) {
+                    cleanupCall(targetNumber, callId);
+                    alert('No answer from ' + targetNumber);
+                }
+            }, 30000);
+
+            clearDisplay();
+        }
+
+        // Cleanup call
+        function cleanupCall(targetNumber, callId) {
+            if (peerConnection) {
+                peerConnection.close();
+                peerConnection = null;
+            }
+
+            if (callTimerInterval) {
+                clearInterval(callTimerInterval);
+                callTimerInterval = null;
+            }
+
+            document.getElementById('activeCall').classList.remove('active');
+            document.getElementById('dialerSection').style.display = 'block';
+            document.getElementById('callTimer').textContent = '00:00';
+            activeCallData = null;
+            callStartTime = null;
+
+            database.ref('calls/' + targetNumber + '/' + callId).remove();
+        }
+
+        // Logout
+        function logout() {
+            if (activeCallData) {
+                endCall();
+            }
+            
+            if (incomingCallRef) {
+                database.ref('calls/' + currentUserNumber).off();
+            }
+
+            if (localStream) {
+                localStream.getTracks().forEach(track => track.stop());
+            }
+
+            auth.signOut();
+            currentUser = null;
+            currentUserNumber = null;
+            showScreen('loginScreen');
+        }
+
+        // Auth state listener
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                if (document.getElementById('mainScreen').classList.contains('active')) {
+                    loadMainScreen(user);
+                }
+            }
+        });
+
+        // Handle page unload
+        window.addEventListener('beforeunload', () => {
+            if (activeCallData) {
+                endCall();
+            }
+        });
+    </script>
+</body>
+</html>
