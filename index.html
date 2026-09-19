@@ -6,9 +6,9 @@
 <title>FuelPass — Weekly Quota QR</title>
 <style>
   :root{
-    --bg:#0a1020; --panel:#111c30; --panel2:#16233a; --line:#24334d;
+    --bg:#0a1020; --panel:#111c30; --line:#24334d;
     --txt:#e8eefb; --muted:#8fa3c0; --accent:#22c55e; --accent2:#16a34a;
-    --warn:#f59e0b; --danger:#ef4444; --radius:14px;
+    --radius:14px;
   }
   *{box-sizing:border-box}
   body{
@@ -143,8 +143,6 @@
 </nav>
 
 <main>
-
-  <!-- ============ PASS ============ -->
   <section class="panel active" id="tab-pass">
     <div class="grid2">
       <div class="card">
@@ -158,7 +156,6 @@
           <button class="btn ghost" id="btnPrint">Print</button>
         </div>
       </div>
-
       <div class="card qr-card">
         <div class="qr-wrap"><canvas id="qrCanvas" width="260" height="260"></canvas></div>
         <div class="token" id="tokenText"></div>
@@ -168,7 +165,6 @@
     </div>
   </section>
 
-  <!-- ============ SCAN ============ -->
   <section class="panel" id="tab-scan">
     <div class="grid2">
       <div class="card">
@@ -182,16 +178,13 @@
           <button class="btn" id="btnScan">Start camera</button>
           <button class="btn ghost" id="btnStopScan">Stop</button>
         </div>
-        <p class="note">Camera access requires the page to be served over <b>https</b> or
-          <b>localhost</b>. Opening the file directly from disk (<code>file://</code>) will block the camera —
-          use “paste token manually” instead.</p>
-
+        <p class="note">Camera requires <b>https</b> or <b>localhost</b>. From a
+          <code>file://</code> page, use “paste token manually”.</p>
         <label for="manualToken">Or paste token manually</label>
         <textarea id="manualToken" rows="3" placeholder="FP1.xxxxx.yyyyyyyy"></textarea>
         <div class="row"><button class="btn" id="btnManual">Verify token</button></div>
         <div class="msg" id="scanMsg"></div>
       </div>
-
       <div class="card" id="dispenseCard">
         <h2>Dispense</h2>
         <div id="dispenseBody"><p class="empty">Scan a pass to begin.</p></div>
@@ -199,7 +192,6 @@
     </div>
   </section>
 
-  <!-- ============ VEHICLES ============ -->
   <section class="panel" id="tab-vehicles">
     <div class="grid2">
       <div class="card">
@@ -222,7 +214,6 @@
         <div class="row"><button class="btn" id="btnAddVehicle">Register vehicle</button></div>
         <div class="msg" id="vehMsg"></div>
       </div>
-
       <div class="card">
         <h2>Registered Vehicles</h2>
         <div id="vehicleList"></div>
@@ -230,7 +221,6 @@
     </div>
   </section>
 
-  <!-- ============ RECORDS ============ -->
   <section class="panel" id="tab-records">
     <div class="card">
       <h2>Dispense Records <span class="badge" id="recCount">0</span></h2>
@@ -238,14 +228,13 @@
       <div class="row"><button class="btn danger" id="btnClearTx">Clear all records</button></div>
     </div>
   </section>
-
 </main>
 
 <footer>
-  Demo prototype — all data lives in your browser's localStorage. The QR encoder is embedded (no internet
-  needed to generate a pass). The signature uses a shared secret embedded in this page, which is fine for a
-  demo but <b>not</b> real security: in production the QR must be signed and verified by a server, and the
-  quota stored in a database.
+  Demo prototype — all data lives in your browser's localStorage. Both the QR encoder and decoder are
+  embedded inline, so no network access is required. The signature uses a shared secret embedded in this
+  page, which is fine for a demo but <b>not</b> real security: in production the QR must be signed and
+  verified by a server, and the quota stored in a database.
 </footer>
 
 <!-- ============================================================
@@ -253,7 +242,6 @@
      ============================================================ -->
 <script>
 const QR = (function(){
-  /* ---- GF(256) ---- */
   const EXP = new Uint8Array(512), LOG = new Uint8Array(256);
   (function(){
     let x = 1;
@@ -266,7 +254,6 @@ const QR = (function(){
   })();
   const gfMul = (a, b) => (a === 0 || b === 0) ? 0 : EXP[LOG[a] + LOG[b]];
 
-  /* ---- Reed–Solomon ---- */
   function rsGenPoly(n){
     let gen = [1];
     for (let i = 0; i < n; i++){
@@ -277,7 +264,7 @@ const QR = (function(){
       }
       gen = next;
     }
-    return gen;                       // monic, gen[0] = 1
+    return gen;
   }
   function rsRemainder(data, gen){
     const n = gen.length - 1;
@@ -292,7 +279,6 @@ const QR = (function(){
     return Array.from(res.slice(data.length));
   }
 
-  /* ---- tables (EC level M only) ---- */
   const BLOCKS = {
     1:  [10, [[1,16]]],
     2:  [16, [[1,28]]],
@@ -311,26 +297,21 @@ const QR = (function(){
   };
   const dataCapacity = v => BLOCKS[v][1].reduce((s,[n,d]) => s + n*d, 0);
 
-  /* ---- data codewords ---- */
   function buildCodewords(text, version){
     const cap = dataCapacity(version);
     const capBits = cap * 8;
     const bytes = new TextEncoder().encode(text);
     const bits = [];
     const push = (val, len) => { for (let i = len - 1; i >= 0; i--) bits.push((val >> i) & 1); };
-
-    push(0b0100, 4);                                   // byte mode
-    push(bytes.length, version < 10 ? 8 : 16);         // char count
+    push(0b0100, 4);
+    push(bytes.length, version < 10 ? 8 : 16);
     for (const b of bytes) push(b, 8);
-
-    const term = Math.min(4, capBits - bits.length);   // terminator
+    const term = Math.min(4, capBits - bits.length);
     for (let i = 0; i < term; i++) bits.push(0);
-    while (bits.length % 8) bits.push(0);              // pad to byte
-
+    while (bits.length % 8) bits.push(0);
     const padBytes = [0xEC, 0x11];
     let pi = 0;
     while (bits.length < capBits) push(padBytes[pi++ % 2], 8);
-
     const cw = [];
     for (let i = 0; i < cap; i++){
       let v = 0;
@@ -340,7 +321,6 @@ const QR = (function(){
     return cw;
   }
 
-  /* ---- error correction + interleave ---- */
   function buildFinal(dataCw, version){
     const [ecPer, groups] = BLOCKS[version];
     const blocks = [];
@@ -361,13 +341,11 @@ const QR = (function(){
     return out;
   }
 
-  /* ---- matrix ---- */
   function makeMatrix(version, codewords, mask){
     const size = version * 4 + 17;
     const m   = Array.from({length:size}, () => new Array(size).fill(0));
     const res = Array.from({length:size}, () => new Array(size).fill(false));
 
-    /* finder patterns + separators */
     for (const [r0, c0] of [[0,0],[0,size-7],[size-7,0]]){
       for (let r = -1; r <= 7; r++){
         for (let c = -1; c <= 7; c++){
@@ -383,13 +361,11 @@ const QR = (function(){
       }
     }
 
-    /* timing patterns */
     for (let i = 8; i < size - 8; i++){
       if (!res[6][i]){ m[6][i] = (i % 2 === 0) ? 1 : 0; res[6][i] = true; }
       if (!res[i][6]){ m[i][6] = (i % 2 === 0) ? 1 : 0; res[i][6] = true; }
     }
 
-    /* alignment patterns */
     const ap = ALIGN[version];
     for (const r of ap){
       for (const c of ap){
@@ -404,18 +380,14 @@ const QR = (function(){
       }
     }
 
-    /* dark module */
     m[size-8][8] = 1;
     res[size-8][8] = true;
 
-    /* reserve format info areas (skip timing intersections) */
     for (let i = 0; i <= 8; i++){
       if (i !== 6){ res[8][i] = true; res[i][8] = true; }
     }
     for (let i = 0; i < 8; i++) res[8][size-1-i] = true;
     for (let i = 0; i < 7; i++) res[size-1-i][8] = true;
-
-    /* reserve version info areas */
     if (version >= 7){
       for (let i = 0; i < 6; i++)
         for (let j = 0; j < 3; j++){
@@ -424,7 +396,6 @@ const QR = (function(){
         }
     }
 
-    /* place data bits in zigzag */
     const bits = [];
     for (const cw of codewords)
       for (let i = 7; i >= 0; i--) bits.push((cw >> i) & 1);
@@ -445,7 +416,6 @@ const QR = (function(){
       up = !up;
     }
 
-    /* mask */
     for (let r = 0; r < size; r++){
       for (let c = 0; c < size; c++){
         if (res[r][c]) continue;
@@ -464,7 +434,6 @@ const QR = (function(){
       }
     }
 
-    /* format info — EC level M = 0b00 */
     const fmtData = (0b00 << 3) | mask;
     let fmtRem = fmtData << 10;
     for (let i = 14; i >= 10; i--)
@@ -478,12 +447,10 @@ const QR = (function(){
       else if (i === 7) m[8][8] = bit;
       else if (i === 8) m[7][8] = bit;
       else m[14 - i][8] = bit;
-
       if (i < 7) m[size-1-i][8] = bit;
       else m[8][size-15+i] = bit;
     }
 
-    /* version info (v7+) */
     if (version >= 7){
       let vRem = version << 12;
       for (let i = 17; i >= 12; i--)
@@ -496,15 +463,12 @@ const QR = (function(){
         m[size-11+col][row] = bit;
       }
     }
-
     return m;
   }
 
-  /* ---- mask penalty ---- */
   function penalty(m){
     const size = m.length;
     let score = 0;
-
     for (let r = 0; r < size; r++){
       let run = 1;
       for (let c = 1; c < size; c++){
@@ -526,7 +490,6 @@ const QR = (function(){
         const v = m[r][c];
         if (m[r][c+1] === v && m[r+1][c] === v && m[r+1][c+1] === v) score += 3;
       }
-
     const p1 = [1,0,1,1,1,0,1,0,0,0,0], p2 = [0,0,0,0,1,0,1,1,1,0,1];
     const scan = arr => {
       for (let i = 0; i + 11 <= arr.length; i++){
@@ -540,26 +503,22 @@ const QR = (function(){
     };
     for (let r = 0; r < size; r++) scan(m[r]);
     for (let c = 0; c < size; c++) scan(m.map(row => row[c]));
-
     let dark = 0;
     for (const row of m) for (const v of row) if (v) dark++;
     score += Math.floor(Math.abs(dark * 100 / (size * size) - 50) / 5) * 10;
     return score;
   }
 
-  /* ---- public ---- */
   function generate(text){
     const len = new TextEncoder().encode(text).length;
     let version = 0;
     for (let v = 1; v <= 10; v++){
-      const overhead = (v < 10) ? 2 : 3;         // mode(4b) + count(8b/16b)
+      const overhead = (v < 10) ? 2 : 3;
       if (len + overhead <= dataCapacity(v)){ version = v; break; }
     }
     if (!version) throw new Error('Data too long for QR (max ~200 characters)');
-
     const dataCw  = buildCodewords(text, version);
     const finalCw = buildFinal(dataCw, version);
-
     let best = null, bestScore = Infinity;
     for (let mask = 0; mask < 8; mask++){
       const m = makeMatrix(version, finalCw, mask);
@@ -573,8 +532,388 @@ const QR = (function(){
 })();
 </script>
 
-<!-- QR scanner (only used by the camera tab) -->
-<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+<!-- ============================================================
+     SELF-CONTAINED QR DECODER
+     Supports versions 1–10, byte mode, EC level M (all 8 masks)
+     ============================================================ -->
+<script>
+const QrScan = (function(){
+  const BLOCKS = {
+    1:  [10, [[1,16]]],
+    2:  [16, [[1,28]]],
+    3:  [26, [[1,44]]],
+    4:  [18, [[2,32]]],
+    5:  [24, [[2,43]]],
+    6:  [16, [[4,27]]],
+    7:  [18, [[4,31]]],
+    8:  [22, [[2,38],[2,39]]],
+    9:  [22, [[3,36],[2,37]]],
+    10: [26, [[4,43],[1,44]]]
+  };
+  const ALIGN = {
+    1: [], 2: [6,18], 3: [6,22], 4: [6,26], 5: [6,30],
+    6: [6,34], 7: [6,22,38], 8: [6,24,42], 9: [6,26,46], 10: [6,28,50]
+  };
+
+  /* ---------- binarization ---------- */
+  function binarize(rgba, w, h){
+    const gray = new Uint8Array(w * h);
+    for (let i = 0; i < w * h; i++){
+      gray[i] = (rgba[i*4] * 77 + rgba[i*4+1] * 150 + rgba[i*4+2] * 29) >> 8;
+    }
+    const hist = new Uint32Array(256);
+    for (let i = 0; i < gray.length; i++) hist[gray[i]]++;
+    const total = gray.length;
+    let sum = 0;
+    for (let i = 0; i < 256; i++) sum += i * hist[i];
+    let sumB = 0, wB = 0, maxVar = 0, thresh = 128;
+    for (let t = 0; t < 256; t++){
+      wB += hist[t];
+      if (!wB) continue;
+      const wF = total - wB;
+      if (!wF) break;
+      sumB += t * hist[t];
+      const mB = sumB / wB;
+      const mF = (sum - sumB) / wF;
+      const v = wB * wF * (mB - mF) * (mB - mF);
+      if (v > maxVar){ maxVar = v; thresh = t; }
+    }
+    const bin = new Uint8Array(w * h);
+    for (let i = 0; i < gray.length; i++) bin[i] = gray[i] <= thresh ? 1 : 0;
+    return bin;
+  }
+
+  /* ---------- finder pattern detection ---------- */
+  function findFinders(bin, w, h){
+    const candidates = [];
+    for (let y = 0; y < h; y++){
+      const runs = [];
+      let state = bin[y * w], count = 1, start = 0;
+      for (let x = 1; x < w; x++){
+        const cur = bin[y * w + x];
+        if (cur === state) count++;
+        else {
+          runs.push({ state, count, start, end: x });
+          state = cur; count = 1; start = x;
+        }
+      }
+      runs.push({ state, count, start, end: w });
+
+      for (let i = 0; i + 4 < runs.length; i++){
+        if (runs[i].state !== 1 || runs[i+1].state !== 0 ||
+            runs[i+2].state !== 1 || runs[i+3].state !== 0 || runs[i+4].state !== 1) continue;
+        const r = [runs[i].count, runs[i+1].count, runs[i+2].count, runs[i+3].count, runs[i+4].count];
+        const tot = r[0]+r[1]+r[2]+r[3]+r[4];
+        const mod = tot / 7;
+        if (mod < 1) continue;
+        const tol = mod * 0.6;
+        if (Math.abs(r[0] - mod) > tol) continue;
+        if (Math.abs(r[1] - mod) > tol) continue;
+        if (Math.abs(r[2] - 3*mod) > tol * 2) continue;
+        if (Math.abs(r[3] - mod) > tol) continue;
+        if (Math.abs(r[4] - mod) > tol) continue;
+        const cx = (runs[i].start + runs[i+4].end) / 2;
+        candidates.push({ x: cx, y, size: mod });
+      }
+    }
+
+    const clusters = [];
+    for (const c of candidates){
+      let found = false;
+      for (const cl of clusters){
+        if (Math.abs(cl.x - c.x) < cl.size * 2.5 && Math.abs(cl.y - c.y) < cl.size * 2.5){
+          cl.x = (cl.x * cl.n + c.x) / (cl.n + 1);
+          cl.y = (cl.y * cl.n + c.y) / (cl.n + 1);
+          cl.size = (cl.size * cl.n + c.size) / (cl.n + 1);
+          cl.n++;
+          found = true;
+          break;
+        }
+      }
+      if (!found) clusters.push({ x: c.x, y: c.y, size: c.size, n: 1 });
+    }
+
+    const verified = [];
+    for (const cl of clusters){
+      if (cl.n < 2) continue;
+      if (!verifyFinderColumn(bin, w, h, Math.round(cl.x), Math.round(cl.y), cl.size)) continue;
+      verified.push({ x: cl.x, y: cl.y, size: cl.size });
+    }
+    return verified;
+  }
+
+  function verifyFinderColumn(bin, w, h, cx, cy, module){
+    const half = Math.ceil(module * 3.5);
+    const y0 = cy - half, y1 = cy + half;
+    if (y0 < 0 || y1 >= h || cx < 0 || cx >= w) return false;
+    const runs = [];
+    let state = bin[y0 * w + cx], count = 1;
+    for (let y = y0 + 1; y <= y1; y++){
+      const cur = bin[y * w + cx];
+      if (cur === state) count++;
+      else { runs.push({ state, count }); state = cur; count = 1; }
+    }
+    runs.push({ state, count });
+    for (let i = 0; i + 4 < runs.length; i++){
+      if (runs[i].state !== 1) continue;
+      const r = [runs[i].count, runs[i+1].count, runs[i+2].count, runs[i+3].count, runs[i+4].count];
+      const tot = r[0]+r[1]+r[2]+r[3]+r[4];
+      const mod = tot / 7;
+      const tol = mod * 0.7;
+      if (Math.abs(r[0]-mod) < tol && Math.abs(r[1]-mod) < tol &&
+          Math.abs(r[2]-3*mod) < tol*2 && Math.abs(r[3]-mod) < tol &&
+          Math.abs(r[4]-mod) < tol) return true;
+    }
+    return false;
+  }
+
+  /* ---------- order finders into TL, TR, BL ---------- */
+  function orderFinders(finders){
+    if (finders.length < 3) return null;
+    for (let i = 0; i < finders.length; i++){
+      for (let j = i+1; j < finders.length; j++){
+        for (let k = j+1; k < finders.length; k++){
+          const trio = [finders[i], finders[j], finders[k]];
+          for (let c = 0; c < 3; c++){
+            const p = trio[c], a = trio[(c+1)%3], b = trio[(c+2)%3];
+            const v1 = { x: a.x - p.x, y: a.y - p.y };
+            const v2 = { x: b.x - p.x, y: b.y - p.y };
+            const len1 = Math.hypot(v1.x, v1.y), len2 = Math.hypot(v2.x, v2.y);
+            if (len1 < 1 || len2 < 1) continue;
+            const cos = (v1.x*v2.x + v1.y*v2.y) / (len1 * len2);
+            if (Math.abs(cos) > 0.4) continue;
+            const ratio = len1 / len2;
+            if (ratio < 0.5 || ratio > 2) continue;
+            const cross = v1.x*v2.y - v1.y*v2.x;
+            let tr, bl;
+            if (cross > 0){ tr = a; bl = b; } else { tr = b; bl = a; }
+            return { tl: p, tr, bl };
+          }
+        }
+      }
+    }
+    return null;
+  }
+
+  /* ---------- homography ---------- */
+  function solveHomography(src, dst){
+    const A = [], b = [];
+    for (let i = 0; i < 4; i++){
+      const [x, y] = src[i], [u, v] = dst[i];
+      A.push([x, y, 1, 0, 0, 0, -u*x, -u*y]); b.push(u);
+      A.push([0, 0, 0, x, y, 1, -v*x, -v*y]); b.push(v);
+    }
+    const n = 8;
+    const M = A.map((row, i) => [...row, b[i]]);
+    for (let i = 0; i < n; i++){
+      let maxRow = i;
+      for (let k = i + 1; k < n; k++)
+        if (Math.abs(M[k][i]) > Math.abs(M[maxRow][i])) maxRow = k;
+      [M[i], M[maxRow]] = [M[maxRow], M[i]];
+      if (Math.abs(M[i][i]) < 1e-10) return null;
+      for (let k = i + 1; k < n; k++){
+        const f = M[k][i] / M[i][i];
+        for (let j = i; j <= n; j++) M[k][j] -= f * M[i][j];
+      }
+    }
+    const x = new Array(n);
+    for (let i = n - 1; i >= 0; i--){
+      let s = M[i][n];
+      for (let j = i + 1; j < n; j++) s -= M[i][j] * x[j];
+      x[i] = s / M[i][i];
+    }
+    return x;
+  }
+  function applyHomography(H, x, y){
+    const d = H[6]*x + H[7]*y + 1;
+    return [(H[0]*x + H[1]*y + H[2]) / d, (H[3]*x + H[4]*y + H[5]) / d];
+  }
+
+  /* ---------- sample grid ---------- */
+  function sampleGrid(bin, w, h, corners){
+    const { tl, tr, bl } = corners;
+    const distX = Math.hypot(tr.x - tl.x, tr.y - tl.y);
+    const distY = Math.hypot(bl.x - tl.x, bl.y - tl.y);
+    const avgModule = (tl.size + tr.size + bl.size) / 3;
+    if (avgModule < 0.5) return null;
+    const estSize = Math.round(((distX + distY) / (2 * avgModule)) + 7);
+    const sizes = [21,25,29,33,37,41,45,49,53,57];
+    let n = sizes[0], bestDiff = Infinity;
+    for (const s of sizes){
+      const d = Math.abs(s - estSize);
+      if (d < bestDiff){ bestDiff = d; n = s; }
+    }
+    if (bestDiff > 4) return null;
+
+    const srcPts = [[3,3],[n-4,3],[3,n-4],[n-4,n-4]];
+    const dstPts = [
+      [tl.x, tl.y], [tr.x, tr.y], [bl.x, bl.y],
+      [tr.x + bl.x - tl.x, tr.y + bl.y - tl.y]
+    ];
+    const H = solveHomography(srcPts, dstPts);
+    if (!H) return null;
+
+    const grid = new Uint8Array(n * n);
+    for (let r = 0; r < n; r++){
+      for (let c = 0; c < n; c++){
+        let dark = 0, tot = 0;
+        for (let dy = 0.2; dy <= 0.8; dy += 0.2){
+          for (let dx = 0.2; dx <= 0.8; dx += 0.2){
+            const [px, py] = applyHomography(H, c + dx, r + dy);
+            const xi = Math.round(px), yi = Math.round(py);
+            if (xi < 0 || xi >= w || yi < 0 || yi >= h) continue;
+            tot++;
+            if (bin[yi * w + xi]) dark++;
+          }
+        }
+        grid[r * n + c] = (tot > 0 && dark * 2 > tot) ? 1 : 0;
+      }
+    }
+    return { grid, size: n };
+  }
+
+  /* ---------- unmask ---------- */
+  function unmask(grid, size, mask){
+    const out = new Uint8Array(grid);
+    for (let r = 0; r < size; r++){
+      for (let c = 0; c < size; c++){
+        let inv = false;
+        switch (mask){
+          case 0: inv = (r + c) % 2 === 0; break;
+          case 1: inv = r % 2 === 0; break;
+          case 2: inv = c % 3 === 0; break;
+          case 3: inv = (r + c) % 3 === 0; break;
+          case 4: inv = (Math.floor(r/2) + Math.floor(c/3)) % 2 === 0; break;
+          case 5: inv = ((r*c) % 2) + ((r*c) % 3) === 0; break;
+          case 6: inv = (((r*c) % 2) + ((r*c) % 3)) % 2 === 0; break;
+          case 7: inv = (((r+c) % 2) + ((r*c) % 3)) % 2 === 0; break;
+        }
+        if (inv) out[r * size + c] ^= 1;
+      }
+    }
+    return out;
+  }
+
+  /* ---------- function-pattern map ---------- */
+  function isFunction(r, c, size, version){
+    if (r < 9 && c < 9) return true;
+    if (r < 9 && c >= size - 8) return true;
+    if (r >= size - 8 && c < 9) return true;
+    if (r === 6 || c === 6) return true;
+    const ap = ALIGN[version];
+    for (const ar of ap){
+      for (const ac of ap){
+        if ((ar <= 8 && ac <= 8) || (ar <= 8 && ac >= size-9) || (ar >= size-9 && ac <= 8)) continue;
+        if (Math.abs(r - ar) <= 2 && Math.abs(c - ac) <= 2) return true;
+      }
+    }
+    if (version >= 7){
+      if (r < 6 && c >= size - 11 && c < size - 8) return true;
+      if (c < 6 && r >= size - 11 && r < size - 8) return true;
+    }
+    return false;
+  }
+
+  /* ---------- data bit stream ---------- */
+  function readDataBits(grid, size, version){
+    const bits = [];
+    let up = true;
+    for (let col = size - 1; col > 0; col -= 2){
+      if (col === 6) col = 5;
+      for (let i = 0; i < size; i++){
+        const row = up ? size - 1 - i : i;
+        for (let k = 0; k < 2; k++){
+          const c = col - k;
+          if (!isFunction(row, c, size, version)) bits.push(grid[row * size + c]);
+        }
+      }
+      up = !up;
+    }
+    return bits;
+  }
+  function bitsToCodewords(bits){
+    const cw = [];
+    for (let i = 0; i + 8 <= bits.length; i += 8){
+      let v = 0;
+      for (let j = 0; j < 8; j++) v = (v << 1) | bits[i + j];
+      cw.push(v);
+    }
+    return cw;
+  }
+  function deinterleave(cw, version){
+    const [ecPer, groups] = BLOCKS[version];
+    const blocks = [];
+    for (const [num, dataPer] of groups)
+      for (let b = 0; b < num; b++)
+        blocks.push({ data: new Array(dataPer), ec: new Array(ecPer) });
+    const maxData = Math.max(...blocks.map(b => b.data.length));
+    let idx = 0;
+    for (let i = 0; i < maxData; i++)
+      for (const b of blocks)
+        if (i < b.data.length) b.data[i] = cw[idx++];
+    for (let i = 0; i < ecPer; i++)
+      for (const b of blocks) b.ec[i] = cw[idx++];
+    return blocks;
+  }
+
+  /* ---------- decode byte-mode payload ---------- */
+  function decodeData(cw){
+    const bits = [];
+    for (const b of cw)
+      for (let i = 7; i >= 0; i--) bits.push((b >> i) & 1);
+    let pos = 0;
+    const readBits = (n) => {
+      let v = 0;
+      for (let i = 0; i < n; i++){
+        if (pos >= bits.length) throw new Error('out of bits');
+        v = (v << 1) | bits[pos++];
+      }
+      return v;
+    };
+    const mode = readBits(4);
+    if (mode !== 4) throw new Error('not byte mode');
+    const len = readBits(8);
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) bytes[i] = readBits(8);
+    return new TextDecoder().decode(bytes);
+  }
+
+  /* ---------- main ---------- */
+  function decode(imageData, w, h){
+    try {
+      const bin = binarize(imageData.data, w, h);
+      const finders = findFinders(bin, w, h);
+      if (finders.length < 3) return null;
+      const corners = orderFinders(finders);
+      if (!corners) return null;
+      const sampled = sampleGrid(bin, w, h, corners);
+      if (!sampled) return null;
+      const { grid, size } = sampled;
+      const version = (size - 17) / 4;
+      if (!BLOCKS[version]) return null;
+
+      // Try all 8 masks — the correct one will decode cleanly.
+      for (let mask = 0; mask < 8; mask++){
+        try {
+          const unmasked = unmask(grid, size, mask);
+          const bits = readDataBits(unmasked, size, version);
+          const cw = bitsToCodewords(bits);
+          const blocks = deinterleave(cw, version);
+          const dataCw = [];
+          for (const b of blocks) dataCw.push(...b.data);
+          const text = decodeData(dataCw);
+          if (text && /^[\x20-\x7E]+$/.test(text)) return text;
+        } catch (e){ /* try next mask */ }
+      }
+      return null;
+    } catch (e){
+      return null;
+    }
+  }
+
+  return { decode };
+})();
+</script>
 
 <script>
 /* =========================================================
@@ -584,11 +923,8 @@ const QR = (function(){
 const $  = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-
-/* short, URL-safe id */
 const uid = p => p + Date.now().toString(36).slice(-5) + Math.random().toString(36).slice(2, 5);
 
-/* ---------- demo signature (NOT real crypto) ---------- */
 const SECRET = 'fuelpass-demo-secret-v1';
 function hash(str){
   let h1 = 0x811c9dc5, h2 = 0x1000193;
@@ -602,7 +938,6 @@ function hash(str){
 }
 const sign = body => hash(SECRET + '|' + body + '|' + SECRET);
 
-/* ---------- base64url ---------- */
 function b64e(str){
   const bytes = new TextEncoder().encode(str);
   let bin = '';
@@ -617,7 +952,6 @@ function b64d(str){
   return new TextDecoder().decode(bytes);
 }
 
-/* ---------- ISO week ---------- */
 function weekKey(d = new Date()){
   const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
   const day = t.getUTCDay() || 7;
@@ -628,7 +962,6 @@ function weekKey(d = new Date()){
 }
 const currentWeek = () => weekKey(new Date());
 
-/* ---------- storage ---------- */
 const K = { veh:'fuelpass.vehicles.v1', tx:'fuelpass.tx.v1' };
 const read  = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k)); return v ?? d; } catch(e){ return d; } };
 const write = (k, v) => localStorage.setItem(k, JSON.stringify(v));
@@ -641,7 +974,6 @@ if (!vehicles.length){
   write(K.veh, vehicles);
 }
 
-/* ---------- token ---------- */
 function makeToken(v){
   const payload = { v:1, id:v.id, reg:v.reg, w:currentWeek(), q:v.quota };
   const body = b64e(JSON.stringify(payload));
@@ -657,12 +989,10 @@ function parseToken(tok){
   return p;
 }
 
-/* ---------- quota math ---------- */
 const usedLiters = (id, week = currentWeek()) =>
   txs.filter(t => t.vehicleId === id && t.week === week).reduce((a,b) => a + b.liters, 0);
 const remainingFor = (v, week = currentWeek()) => Math.max(0, v.quota - usedLiters(v.id, week));
 
-/* ---------- messages ---------- */
 function flash(id, text, kind){
   const el = document.getElementById(id);
   if (!el) return;
@@ -672,9 +1002,7 @@ function flash(id, text, kind){
   el._t = setTimeout(() => { el.className = 'msg'; }, 6000);
 }
 
-/* =========================================================
-   RENDER
-   ========================================================= */
+/* ---------- render ---------- */
 function renderWeekLabel(){ $('#weekLabel').textContent = currentWeek(); }
 
 function drawQR(text){
@@ -686,7 +1014,6 @@ function drawQR(text){
     const scale = Math.max(2, Math.floor(320 / total));
     canvas.width  = total * scale;
     canvas.height = total * scale;
-
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = '#0b1220';
@@ -698,8 +1025,7 @@ function drawQR(text){
     canvas.width = 260; canvas.height = 260;
     ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, 260, 260);
     ctx.fillStyle = '#b91c1c';
-    ctx.font = '13px sans-serif';
-    ctx.textAlign = 'center';
+    ctx.font = '13px sans-serif'; ctx.textAlign = 'center';
     ctx.fillText('Cannot render QR', 130, 120);
     ctx.fillText(e.message, 130, 142);
   }
@@ -708,7 +1034,6 @@ function drawQR(text){
 function renderPass(){
   const sel = $('#passVehicle');
   const prev = sel.value;
-
   if (!vehicles.length){
     sel.innerHTML = '<option>No vehicles</option>';
     $('#passInfo').innerHTML = '<p class="empty">Register a vehicle first.</p>';
@@ -717,17 +1042,14 @@ function renderPass(){
     c.clearRect(0, 0, $('#qrCanvas').width, $('#qrCanvas').height);
     return;
   }
-
   sel.innerHTML = vehicles.map(v =>
     `<option value="${v.id}">${esc(v.reg)} — ${esc(v.owner)}</option>`).join('');
   if (prev && vehicles.some(v => v.id === prev)) sel.value = prev;
-
   const v = vehicles.find(x => x.id === sel.value) || vehicles[0];
   const used = usedLiters(v.id);
   const rem  = Math.max(0, v.quota - used);
   const pct  = v.quota > 0 ? (rem / v.quota) * 100 : 0;
   const fill = pct > 50 ? 'ok-fill' : pct > 20 ? 'warn-fill' : 'bad-fill';
-
   $('#passInfo').innerHTML = `
     <div class="stat-row"><span>Owner</span><span>${esc(v.owner)}</span></div>
     <div class="stat-row"><span>Type</span><span>${esc(v.type)}</span></div>
@@ -736,7 +1058,6 @@ function renderPass(){
     <div class="stat-row"><span>Remaining</span><span style="color:#7ee2a8">${rem.toFixed(1)} L</span></div>
     <div class="bar"><div class="bar-fill ${fill}" style="width:${pct}%"></div></div>
   `;
-
   const token = makeToken(v);
   $('#tokenText').textContent = token;
   drawQR(token);
@@ -792,9 +1113,7 @@ function renderAll(){
   renderRecords();
 }
 
-/* =========================================================
-   SCAN / VERIFY / DISPENSE
-   ========================================================= */
+/* ---------- scan / dispense ---------- */
 let verified = null;
 
 function handleToken(token){
@@ -807,7 +1126,6 @@ function handleToken(token){
       throw new Error(`Pass is for week ${p.w} — current week is ${currentWeek()}`);
     if (p.q !== v.quota)
       throw new Error('Quota was changed — please regenerate the pass');
-
     verified = { vehicle: v, week: p.w, quota: v.quota, remaining: remainingFor(v, p.w) };
     renderDispense();
     flash('scanMsg', `✔ Valid pass for ${v.reg}`, 'ok');
@@ -827,7 +1145,6 @@ function renderDispense(){
   const v = verified.vehicle;
   const rem = verified.remaining;
   const exhausted = rem <= 0.001;
-
   box.innerHTML = `
     <div class="stat-row"><span>Vehicle</span><span>${esc(v.reg)}</span></div>
     <div class="stat-row"><span>Owner</span><span>${esc(v.owner)}</span></div>
@@ -835,9 +1152,7 @@ function renderDispense(){
     <div class="stat-row"><span>Weekly quota</span><span>${verified.quota} L</span></div>
     <div class="stat-row"><span>Remaining</span>
       <span style="color:${exhausted ? '#fca5a5' : '#7ee2a8'}">${rem.toFixed(1)} L</span></div>
-
     ${exhausted ? '<p class="msg bad show" style="margin-top:12px">Quota already fully used for this week.</p>' : ''}
-
     <label for="liters">Litres to dispense</label>
     <input id="liters" type="number" min="0.1" step="0.1" value="${exhausted ? 0 : rem.toFixed(1)}"
            ${exhausted ? 'disabled' : ''} />
@@ -849,7 +1164,6 @@ function renderDispense(){
     </div>
     <div class="msg" id="dispMsg"></div>
   `;
-
   const fillBtn = $('#btnFill');
   if (fillBtn) fillBtn.onclick = () => { $('#liters').value = rem.toFixed(1); };
   const dBtn = $('#btnDispense');
@@ -862,7 +1176,6 @@ function doDispense(){
   if (!(liters > 0)) return flash('dispMsg', 'Enter a valid amount', 'bad');
   if (liters > verified.remaining + 1e-9)
     return flash('dispMsg', `Exceeds remaining quota (${verified.remaining.toFixed(1)} L)`, 'bad');
-
   txs.push({
     id: uid('T'),
     vehicleId: verified.vehicle.id,
@@ -873,7 +1186,6 @@ function doDispense(){
     at: Date.now()
   });
   write(K.tx, txs);
-
   verified.remaining = Math.max(0, verified.remaining - liters);
   renderDispense();
   renderPass();
@@ -887,44 +1199,42 @@ function doDispense(){
 let camStream = null, rafId = null;
 
 async function startScan(){
-  if (typeof jsQR === 'undefined')
-    return flash('scanMsg', 'Scanner library not loaded (no internet?) — paste the token manually instead.', 'bad');
-
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia)
     return flash('scanMsg', 'Camera API unavailable. Serve this page over https or localhost.', 'bad');
-
   try {
     camStream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: { ideal: 'environment' } }, audio: false
+      video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } },
+      audio: false
     });
   } catch (e){
-    return flash('scanMsg', 'Camera unavailable: ' + e.message + ' (try https or localhost)', 'bad');
+    return flash('scanMsg', 'Camera unavailable: ' + e.message + ' — try https or localhost.', 'bad');
   }
-
   const video = $('#video');
   video.srcObject = camStream;
   await video.play();
   $('#camOff').style.display = 'none';
   $('#camFrame').style.display = 'block';
 
+  // Downscale to keep decoding fast (and stable)
+  const procW = Math.min(640, video.videoWidth || 640);
+  const procH = Math.round((video.videoHeight || 480) * procW / (video.videoWidth || 640));
   const canvas = document.createElement('canvas');
+  canvas.width = procW; canvas.height = procH;
   const ctx = canvas.getContext('2d', { willReadFrequently: true });
 
   const tick = () => {
     if (!camStream) return;
     if (video.readyState === video.HAVE_ENOUGH_DATA){
-      const w = video.videoWidth, h = video.videoHeight;
-      if (w && h){
-        canvas.width = w; canvas.height = h;
-        ctx.drawImage(video, 0, 0, w, h);
-        const img = ctx.getImageData(0, 0, w, h);
-        const code = jsQR(img.data, img.width, img.height, { inversionAttempts: 'dontInvert' });
-        if (code && code.data){
-          handleToken(code.data);
+      ctx.drawImage(video, 0, 0, procW, procH);
+      try {
+        const img = ctx.getImageData(0, 0, procW, procH);
+        const text = QrScan.decode(img, procW, procH);
+        if (text){
+          handleToken(text);
           stopScan();
           return;
         }
-      }
+      } catch (e){ /* keep scanning */ }
     }
     rafId = requestAnimationFrame(tick);
   };
@@ -944,9 +1254,7 @@ function stopScan(){
   $('#camFrame').style.display = 'none';
 }
 
-/* =========================================================
-   EVENTS
-   ========================================================= */
+/* ---------- events ---------- */
 $$('.tab').forEach(btn => btn.onclick = () => {
   $$('.tab').forEach(b => b.classList.remove('active'));
   $$('.panel').forEach(p => p.classList.remove('active'));
@@ -1003,21 +1311,17 @@ $('#btnManual').onclick = () => {
   handleToken(t);
 };
 
-/* vehicles */
 $('#btnAddVehicle').onclick = () => {
   const reg = $('#vReg').value.trim().toUpperCase();
   const owner = $('#vOwner').value.trim();
   const type = $('#vType').value;
   const quota = parseFloat($('#vQuota').value);
-
   if (!reg) return flash('vehMsg', 'Registration number is required', 'bad');
   if (!owner) return flash('vehMsg', 'Owner name is required', 'bad');
   if (!(quota > 0)) return flash('vehMsg', 'Quota must be greater than 0', 'bad');
   if (vehicles.some(v => v.reg === reg)) return flash('vehMsg', 'That vehicle is already registered', 'bad');
-
   vehicles.push({ id: uid('V'), reg, owner, type, quota });
   write(K.veh, vehicles);
-
   $('#vReg').value = ''; $('#vOwner').value = '';
   flash('vehMsg', `✔ ${reg} registered with ${quota} L/week`, 'ok');
   renderAll();
@@ -1035,7 +1339,6 @@ $('#vehicleList').onclick = e => {
   renderAll();
 };
 
-/* records */
 $('#btnClearTx').onclick = () => {
   if (!txs.length) return;
   if (!confirm("Delete all dispense records? This resets everyone's weekly usage.")) return;
@@ -1046,7 +1349,6 @@ $('#btnClearTx').onclick = () => {
   renderAll();
 };
 
-/* auto-refresh when the week rolls over while the page is open */
 setInterval(() => {
   if ($('#weekLabel').textContent !== currentWeek()){
     verified = null;
@@ -1055,7 +1357,6 @@ setInterval(() => {
   }
 }, 30000);
 
-/* boot */
 renderAll();
 renderDispense();
 </script>
