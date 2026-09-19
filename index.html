@@ -1,890 +1,1063 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mata Online Calling</title>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-
-        .container {
-            background: white;
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            max-width: 400px;
-            width: 100%;
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        .header h1 {
-            color: #667eea;
-            font-size: 28px;
-            margin-bottom: 10px;
-        }
-
-        .header p {
-            color: #666;
-            font-size: 14px;
-        }
-
-        .screen {
-            display: none;
-        }
-
-        .screen.active {
-            display: block;
-        }
-
-        .input-group {
-            margin-bottom: 20px;
-        }
-
-        .input-group label {
-            display: block;
-            margin-bottom: 5px;
-            color: #333;
-            font-weight: 500;
-        }
-
-        .input-group input {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e1e1e1;
-            border-radius: 10px;
-            font-size: 16px;
-            transition: border-color 0.3s;
-        }
-
-        .input-group input:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        .btn {
-            width: 100%;
-            padding: 14px;
-            background: #667eea;
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.3s;
-            margin-bottom: 10px;
-        }
-
-        .btn:hover {
-            background: #5a67d8;
-        }
-
-        .btn-secondary {
-            background: #48bb78;
-        }
-
-        .btn-secondary:hover {
-            background: #38a169;
-        }
-
-        .btn-danger {
-            background: #f56565;
-        }
-
-        .btn-danger:hover {
-            background: #e53e3e;
-        }
-
-        .btn-warning {
-            background: #ed8936;
-        }
-
-        .btn-warning:hover {
-            background: #dd6b20;
-        }
-
-        .user-info {
-            background: #f7fafc;
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-
-        .unique-number {
-            font-size: 24px;
-            font-weight: bold;
-            color: #667eea;
-            margin: 10px 0;
-        }
-
-        .dialer {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin: 20px 0;
-        }
-
-        .dial-btn {
-            padding: 15px;
-            background: #f7fafc;
-            border: 2px solid #e1e1e1;
-            border-radius: 10px;
-            font-size: 20px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .dial-btn:hover {
-            background: #667eea;
-            color: white;
-            border-color: #667eea;
-        }
-
-        .number-display {
-            background: #f7fafc;
-            padding: 15px;
-            border-radius: 10px;
-            font-size: 24px;
-            text-align: center;
-            margin: 20px 0;
-            letter-spacing: 2px;
-        }
-
-        .incoming-call {
-            background: #fff3cd;
-            border: 2px solid #ffc107;
-            border-radius: 10px;
-            padding: 20px;
-            text-align: center;
-            margin: 20px 0;
-            display: none;
-        }
-
-        .incoming-call.active {
-            display: block;
-            animation: pulse 1.5s infinite;
-        }
-
-        .active-call {
-            background: #c6f6d5;
-            border: 2px solid #48bb78;
-            border-radius: 10px;
-            padding: 20px;
-            text-align: center;
-            margin: 20px 0;
-            display: none;
-        }
-
-        .active-call.active {
-            display: block;
-        }
-
-        .call-timer {
-            font-size: 32px;
-            font-weight: bold;
-            color: #22543d;
-            margin: 15px 0;
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
-
-        .call-actions {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            margin-top: 15px;
-        }
-
-        .call-actions .btn {
-            width: auto;
-            padding: 10px 30px;
-        }
-
-        .error-message {
-            color: #f56565;
-            font-size: 14px;
-            margin-top: 5px;
-            display: none;
-        }
-
-        .link-text {
-            text-align: center;
-            margin-top: 15px;
-            color: #666;
-        }
-
-        .link-text a {
-            color: #667eea;
-            cursor: pointer;
-            text-decoration: underline;
-        }
-
-        .status-indicator {
-            display: inline-block;
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            margin-right: 5px;
-        }
-
-        .status-ringing {
-            background: #ffc107;
-            animation: blink 1s infinite;
-        }
-
-        .status-connected {
-            background: #48bb78;
-        }
-
-        @keyframes blink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.3; }
-        }
-    </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>FuelPass — Weekly Quota QR</title>
+<style>
+  :root{
+    --bg:#0a1020; --panel:#111c30; --panel2:#16233a; --line:#24334d;
+    --txt:#e8eefb; --muted:#8fa3c0; --accent:#22c55e; --accent2:#16a34a;
+    --warn:#f59e0b; --danger:#ef4444; --radius:14px;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;background:radial-gradient(1200px 600px at 10% -10%,#16243d,#0a1020 60%);
+    color:var(--txt);font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+    font-size:15px;line-height:1.45;min-height:100vh;
+  }
+  header{
+    display:flex;align-items:center;gap:14px;padding:14px 20px;border-bottom:1px solid var(--line);
+    background:rgba(10,16,32,.75);backdrop-filter:blur(8px);position:sticky;top:0;z-index:20;flex-wrap:wrap;
+  }
+  .logo{
+    width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-size:22px;
+    background:linear-gradient(145deg,var(--accent),#0e7a3a);box-shadow:0 6px 18px rgba(34,197,94,.25);
+  }
+  header h1{margin:0;font-size:18px;letter-spacing:.3px}
+  header .sub{margin:0;font-size:12px;color:var(--muted)}
+  .week-chip{
+    margin-left:auto;font-size:12px;color:var(--muted);border:1px solid var(--line);
+    padding:6px 12px;border-radius:999px;background:var(--panel);
+  }
+  .week-chip b{color:var(--accent)}
+  nav.tabs{display:flex;gap:6px;padding:12px 20px 0;flex-wrap:wrap;max-width:1100px;margin:0 auto;width:100%}
+  .tab{
+    border:1px solid var(--line);background:var(--panel);color:var(--muted);padding:9px 16px;
+    border-radius:999px;cursor:pointer;font-size:14px;font-weight:600;transition:.15s;
+  }
+  .tab:hover{color:var(--txt);border-color:#33465f}
+  .tab.active{background:linear-gradient(145deg,var(--accent),var(--accent2));color:#04140a;border-color:transparent}
+  main{max-width:1100px;margin:0 auto;padding:18px 20px 60px;width:100%}
+  .panel{display:none;animation:fade .2s ease}
+  .panel.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media (max-width:860px){.grid2{grid-template-columns:1fr}}
+  .card{
+    background:linear-gradient(180deg,var(--panel),#0e1728);border:1px solid var(--line);
+    border-radius:var(--radius);padding:18px;margin-bottom:16px;
+  }
+  .card h2{margin:0 0 12px;font-size:15px;letter-spacing:.3px;text-transform:uppercase;color:var(--muted)}
+  label{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin:12px 0 6px}
+  input,select,textarea{
+    width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--line);
+    background:#0b1424;color:var(--txt);font-size:15px;font-family:inherit;outline:none;
+  }
+  input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(34,197,94,.15)}
+  textarea{resize:vertical;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px}
+  .row{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+  .btn{
+    border:none;border-radius:10px;padding:11px 16px;font-size:14px;font-weight:700;cursor:pointer;
+    background:linear-gradient(145deg,var(--accent),var(--accent2));color:#04140a;transition:.15s;
+  }
+  .btn:hover{filter:brightness(1.08)}
+  .btn:active{transform:translateY(1px)}
+  .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--txt)}
+  .btn.ghost:hover{border-color:var(--accent);color:var(--accent)}
+  .btn.danger{background:transparent;border:1px solid #5a2630;color:#ff8a8a}
+  .btn.danger:hover{background:#3a1620}
+  .btn.tiny{padding:6px 10px;font-size:12px;border-radius:8px}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+  .qr-card{display:flex;flex-direction:column;align-items:center;text-align:center}
+  .qr-wrap{background:#fff;padding:14px;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.4);max-width:100%}
+  #qrCanvas{display:block;border-radius:6px;max-width:100%;height:auto}
+  .token{
+    margin-top:14px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10.5px;
+    color:var(--muted);word-break:break-all;max-width:100%;background:#0b1424;border:1px solid var(--line);
+    border-radius:10px;padding:10px;width:100%;
+  }
+  .hint{font-size:12px;color:var(--muted);margin:12px 0 0}
+  .muted{color:var(--muted)}
+  .small{font-size:12px}
+  .strong{font-weight:700}
+  .stat-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px dashed #1d2a41;font-size:14px}
+  .stat-row:last-child{border-bottom:none}
+  .stat-row span:last-child{font-weight:700}
+  .bar{height:9px;border-radius:99px;background:#0b1424;border:1px solid var(--line);overflow:hidden;margin-top:10px}
+  .bar-fill{height:100%;border-radius:99px;transition:width .35s ease,background .3s}
+  .ok-fill{background:linear-gradient(90deg,#22c55e,#4ade80)}
+  .warn-fill{background:linear-gradient(90deg,#f59e0b,#fbbf24)}
+  .bad-fill{background:linear-gradient(90deg,#ef4444,#f87171)}
+  .cam{
+    position:relative;width:100%;aspect-ratio:4/3;background:#05090f;border-radius:12px;
+    overflow:hidden;border:1px solid var(--line);
+  }
+  .cam video{width:100%;height:100%;object-fit:cover;display:block}
+  .cam .frame{
+    position:absolute;inset:14%;border:2px solid rgba(34,197,94,.8);border-radius:14px;
+    box-shadow:0 0 0 9999px rgba(0,0,0,.35);pointer-events:none;
+  }
+  .cam .off{position:absolute;inset:0;display:grid;place-items:center;color:var(--muted);font-size:13px;text-align:center;padding:20px}
+  .msg{margin-top:12px;font-size:13.5px;padding:10px 12px;border-radius:10px;display:none}
+  .msg.show{display:block}
+  .msg.ok{background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.4);color:#86efac}
+  .msg.bad{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.4);color:#fca5a5}
+  .list-item{
+    display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px;
+    border:1px solid var(--line);border-radius:12px;background:#0e1728;margin-bottom:10px;flex-wrap:wrap;
+  }
+  .list-item .right{display:flex;align-items:center;gap:10px}
+  .pill{font-size:12px;font-weight:700;padding:5px 11px;border-radius:999px;white-space:nowrap}
+  .pill.ok{background:rgba(34,197,94,.15);color:#7ee2a8;border:1px solid rgba(34,197,94,.35)}
+  .pill.bad{background:rgba(239,68,68,.15);color:#fca5a5;border:1px solid rgba(239,68,68,.35)}
+  .pill.warn{background:rgba(245,158,11,.15);color:#fcd34d;border:1px solid rgba(245,158,11,.35)}
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  th{text-align:left;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.6px;
+     padding:8px 10px;border-bottom:1px solid var(--line)}
+  td{padding:10px;border-bottom:1px solid #17233a}
+  tr:last-child td{border-bottom:none}
+  .empty{color:var(--muted);font-size:14px;padding:14px 0}
+  footer{max-width:1100px;margin:0 auto;padding:0 20px 40px;color:#5d7290;font-size:11.5px;line-height:1.6}
+  .badge{display:inline-block;font-size:10px;padding:2px 7px;border-radius:6px;background:#1b2b45;color:#8fa3c0;margin-left:6px}
+  .note{font-size:12px;color:#fcd34d;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);
+        padding:8px 10px;border-radius:9px;margin-top:10px}
+</style>
 </head>
 <body>
-    <div class="container">
-        <!-- Register Screen -->
-        <div id="registerScreen" class="screen active">
-            <div class="header">
-                <h1>📞 Mata Online Calling</h1>
-                <p>Create your account and get a unique number</p>
-            </div>
-            <div class="input-group">
-                <label>Email</label>
-                <input type="email" id="regEmail" placeholder="Enter your email">
-            </div>
-            <div class="input-group">
-                <label>Password</label>
-                <input type="password" id="regPassword" placeholder="Enter password">
-            </div>
-            <div class="input-group">
-                <label>Name</label>
-                <input type="text" id="regName" placeholder="Enter your name">
-            </div>
-            <p class="error-message" id="regError"></p>
-            <button class="btn" onclick="register()">Register</button>
-            <p class="link-text">Already have an account? <a onclick="showScreen('loginScreen')">Login</a></p>
+
+<header>
+  <div class="logo">⛽</div>
+  <div>
+    <h1>FuelPass</h1>
+    <p class="sub">Weekly fuel quota · signed QR pass</p>
+  </div>
+  <div class="week-chip">Week <b id="weekLabel">—</b></div>
+</header>
+
+<nav class="tabs">
+  <button class="tab active" data-tab="pass">My Pass</button>
+  <button class="tab" data-tab="scan">Scan &amp; Dispense</button>
+  <button class="tab" data-tab="vehicles">Vehicles</button>
+  <button class="tab" data-tab="records">Records</button>
+</nav>
+
+<main>
+
+  <!-- ============ PASS ============ -->
+  <section class="panel active" id="tab-pass">
+    <div class="grid2">
+      <div class="card">
+        <h2>Weekly Quota</h2>
+        <label for="passVehicle">Select vehicle</label>
+        <select id="passVehicle"></select>
+        <div id="passInfo"></div>
+        <div class="row">
+          <button class="btn ghost" id="btnCopy">Copy token</button>
+          <button class="btn ghost" id="btnPng">Download PNG</button>
+          <button class="btn ghost" id="btnPrint">Print</button>
         </div>
+      </div>
 
-        <!-- Login Screen -->
-        <div id="loginScreen" class="screen">
-            <div class="header">
-                <h1>📞 Welcome Back</h1>
-                <p>Login to your account</p>
-            </div>
-            <div class="input-group">
-                <label>Email</label>
-                <input type="email" id="loginEmail" placeholder="Enter your email">
-            </div>
-            <div class="input-group">
-                <label>Password</label>
-                <input type="password" id="loginPassword" placeholder="Enter password">
-            </div>
-            <p class="error-message" id="loginError"></p>
-            <button class="btn" onclick="login()">Login</button>
-            <p class="link-text">Don't have an account? <a onclick="showScreen('registerScreen')">Register</a></p>
-        </div>
-
-        <!-- Main Screen -->
-        <div id="mainScreen" class="screen">
-            <div class="header">
-                <h1>📞 Mata Online Calling</h1>
-            </div>
-            <div class="user-info">
-                <p>Welcome, <strong id="userName"></strong></p>
-                <p>Your Number:</p>
-                <div class="unique-number" id="userNumber">0120000000</div>
-            </div>
-            
-            <!-- Incoming Call Alert -->
-            <div class="incoming-call" id="incomingCall">
-                <h3>📲 Incoming Call</h3>
-                <p>From: <strong id="callerNumber"></strong></p>
-                <p><span class="status-indicator status-ringing"></span> Ringing...</p>
-                <div class="call-actions">
-                    <button class="btn btn-secondary" onclick="answerCall()">✅ Answer</button>
-                    <button class="btn btn-danger" onclick="rejectCall()">❌ Reject</button>
-                </div>
-            </div>
-
-            <!-- Active Call Screen -->
-            <div class="active-call" id="activeCall">
-                <h3>🔊 Call in Progress</h3>
-                <p>With: <strong id="activeCallNumber"></strong></p>
-                <p><span class="status-indicator status-connected"></span> Connected</p>
-                <div class="call-timer" id="callTimer">00:00</div>
-                <div class="call-actions">
-                    <button class="btn btn-danger" onclick="endCall()">📞 End Call</button>
-                </div>
-            </div>
-
-            <!-- Dialer (hidden during calls) -->
-            <div id="dialerSection">
-                <div class="number-display" id="dialDisplay"></div>
-                <div class="dialer">
-                    <button class="dial-btn" onclick="addDigit('1')">1</button>
-                    <button class="dial-btn" onclick="addDigit('2')">2</button>
-                    <button class="dial-btn" onclick="addDigit('3')">3</button>
-                    <button class="dial-btn" onclick="addDigit('4')">4</button>
-                    <button class="dial-btn" onclick="addDigit('5')">5</button>
-                    <button class="dial-btn" onclick="addDigit('6')">6</button>
-                    <button class="dial-btn" onclick="addDigit('7')">7</button>
-                    <button class="dial-btn" onclick="addDigit('8')">8</button>
-                    <button class="dial-btn" onclick="addDigit('9')">9</button>
-                    <button class="dial-btn" onclick="addDigit('*')">*</button>
-                    <button class="dial-btn" onclick="addDigit('0')">0</button>
-                    <button class="dial-btn" onclick="addDigit('#')">#</button>
-                </div>
-                <div style="display: flex; gap: 10px;">
-                    <button class="btn btn-secondary" onclick="makeCall()">📞 Call</button>
-                    <button class="btn btn-danger" onclick="clearDisplay()">Clear</button>
-                </div>
-            </div>
-            
-            <button class="btn" onclick="logout()" style="margin-top: 10px;">Logout</button>
-        </div>
+      <div class="card qr-card">
+        <div class="qr-wrap"><canvas id="qrCanvas" width="260" height="260"></canvas></div>
+        <div class="token" id="tokenText"></div>
+        <p class="hint">This pass is valid only for the current week and only for the selected vehicle.
+          It is regenerated automatically every week.</p>
+      </div>
     </div>
+  </section>
 
-    <script>
-        // Initialize Firebase
-        const firebaseConfig = {
-            apiKey: "AIzaSyDLSnWPSjF8Qf2mQ9zc2HfvpTH8dPzIrL8",
-            authDomain: "demobatta-1b673.firebaseapp.com",
-            databaseURL: "https://demobatta-1b673-default-rtdb.firebaseio.com",
-            projectId: "demobatta-1b673",
-            storageBucket: "demobatta-1b673.firebasestorage.app",
-            messagingSenderId: "609366383941",
-            appId: "1:609366383941:web:11f782595e3bd4f855722c"
-        };
+  <!-- ============ SCAN ============ -->
+  <section class="panel" id="tab-scan">
+    <div class="grid2">
+      <div class="card">
+        <h2>Scan Pass</h2>
+        <div class="cam">
+          <video id="video" playsinline muted></video>
+          <div class="frame" id="camFrame" style="display:none"></div>
+          <div class="off" id="camOff">Camera off — press “Start camera”</div>
+        </div>
+        <div class="row">
+          <button class="btn" id="btnScan">Start camera</button>
+          <button class="btn ghost" id="btnStopScan">Stop</button>
+        </div>
+        <p class="note">Camera access requires the page to be served over <b>https</b> or
+          <b>localhost</b>. Opening the file directly from disk (<code>file://</code>) will block the camera —
+          use “paste token manually” instead.</p>
 
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const database = firebase.database();
+        <label for="manualToken">Or paste token manually</label>
+        <textarea id="manualToken" rows="3" placeholder="FP1.xxxxx.yyyyyyyy"></textarea>
+        <div class="row"><button class="btn" id="btnManual">Verify token</button></div>
+        <div class="msg" id="scanMsg"></div>
+      </div>
 
-        let currentUser = null;
-        let currentUserNumber = null;
-        let incomingCallRef = null;
-        let activeCallData = null;
-        let callTimerInterval = null;
-        let callStartTime = null;
+      <div class="card" id="dispenseCard">
+        <h2>Dispense</h2>
+        <div id="dispenseBody"><p class="empty">Scan a pass to begin.</p></div>
+      </div>
+    </div>
+  </section>
 
-        // WebRTC Configuration
-        const peerConnectionConfig = {
-            iceServers: [
-                { urls: 'stun:stun.l.google.com:19302' },
-                { urls: 'stun:stun1.l.google.com:19302' }
-            ]
-        };
+  <!-- ============ VEHICLES ============ -->
+  <section class="panel" id="tab-vehicles">
+    <div class="grid2">
+      <div class="card">
+        <h2>Register Vehicle</h2>
+        <label for="vReg">Registration number</label>
+        <input id="vReg" placeholder="e.g. CAB-1234" />
+        <label for="vOwner">Owner name</label>
+        <input id="vOwner" placeholder="e.g. A. Perera" />
+        <label for="vType">Vehicle type</label>
+        <select id="vType">
+          <option>Motorcycle</option>
+          <option selected>Car</option>
+          <option>Three-wheeler</option>
+          <option>Van</option>
+          <option>Bus</option>
+          <option>Lorry</option>
+        </select>
+        <label for="vQuota">Weekly quota (litres)</label>
+        <input id="vQuota" type="number" min="1" step="1" value="30" />
+        <div class="row"><button class="btn" id="btnAddVehicle">Register vehicle</button></div>
+        <div class="msg" id="vehMsg"></div>
+      </div>
 
-        let localStream = null;
-        let peerConnection = null;
+      <div class="card">
+        <h2>Registered Vehicles</h2>
+        <div id="vehicleList"></div>
+      </div>
+    </div>
+  </section>
 
-        // Generate unique number (012XXXXXXX)
-        function generateUniqueNumber() {
-            const randomPart = Math.floor(1000000 + Math.random() * 9000000);
-            return '012' + randomPart.toString();
+  <!-- ============ RECORDS ============ -->
+  <section class="panel" id="tab-records">
+    <div class="card">
+      <h2>Dispense Records <span class="badge" id="recCount">0</span></h2>
+      <div id="recordsBody"></div>
+      <div class="row"><button class="btn danger" id="btnClearTx">Clear all records</button></div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  Demo prototype — all data lives in your browser's localStorage. The QR encoder is embedded (no internet
+  needed to generate a pass). The signature uses a shared secret embedded in this page, which is fine for a
+  demo but <b>not</b> real security: in production the QR must be signed and verified by a server, and the
+  quota stored in a database.
+</footer>
+
+<!-- ============================================================
+     SELF-CONTAINED QR ENCODER (byte mode, EC level M, versions 1–10)
+     ============================================================ -->
+<script>
+const QR = (function(){
+  /* ---- GF(256) ---- */
+  const EXP = new Uint8Array(512), LOG = new Uint8Array(256);
+  (function(){
+    let x = 1;
+    for (let i = 0; i < 255; i++){
+      EXP[i] = x; LOG[x] = i;
+      x <<= 1;
+      if (x & 0x100) x ^= 0x11D;
+    }
+    for (let i = 255; i < 512; i++) EXP[i] = EXP[i - 255];
+  })();
+  const gfMul = (a, b) => (a === 0 || b === 0) ? 0 : EXP[LOG[a] + LOG[b]];
+
+  /* ---- Reed–Solomon ---- */
+  function rsGenPoly(n){
+    let gen = [1];
+    for (let i = 0; i < n; i++){
+      const next = new Array(gen.length + 1).fill(0);
+      for (let k = 0; k < gen.length; k++){
+        next[k]     ^= gen[k];
+        next[k + 1] ^= gfMul(gen[k], EXP[i]);
+      }
+      gen = next;
+    }
+    return gen;                       // monic, gen[0] = 1
+  }
+  function rsRemainder(data, gen){
+    const n = gen.length - 1;
+    const res = new Uint8Array(data.length + n);
+    res.set(data);
+    for (let i = 0; i < data.length; i++){
+      const coef = res[i];
+      if (coef){
+        for (let j = 0; j < gen.length; j++) res[i + j] ^= gfMul(gen[j], coef);
+      }
+    }
+    return Array.from(res.slice(data.length));
+  }
+
+  /* ---- tables (EC level M only) ---- */
+  const BLOCKS = {
+    1:  [10, [[1,16]]],
+    2:  [16, [[1,28]]],
+    3:  [26, [[1,44]]],
+    4:  [18, [[2,32]]],
+    5:  [24, [[2,43]]],
+    6:  [16, [[4,27]]],
+    7:  [18, [[4,31]]],
+    8:  [22, [[2,38],[2,39]]],
+    9:  [22, [[3,36],[2,37]]],
+    10: [26, [[4,43],[1,44]]]
+  };
+  const ALIGN = {
+    1: [], 2: [6,18], 3: [6,22], 4: [6,26], 5: [6,30],
+    6: [6,34], 7: [6,22,38], 8: [6,24,42], 9: [6,26,46], 10: [6,28,50]
+  };
+  const dataCapacity = v => BLOCKS[v][1].reduce((s,[n,d]) => s + n*d, 0);
+
+  /* ---- data codewords ---- */
+  function buildCodewords(text, version){
+    const cap = dataCapacity(version);
+    const capBits = cap * 8;
+    const bytes = new TextEncoder().encode(text);
+    const bits = [];
+    const push = (val, len) => { for (let i = len - 1; i >= 0; i--) bits.push((val >> i) & 1); };
+
+    push(0b0100, 4);                                   // byte mode
+    push(bytes.length, version < 10 ? 8 : 16);         // char count
+    for (const b of bytes) push(b, 8);
+
+    const term = Math.min(4, capBits - bits.length);   // terminator
+    for (let i = 0; i < term; i++) bits.push(0);
+    while (bits.length % 8) bits.push(0);              // pad to byte
+
+    const padBytes = [0xEC, 0x11];
+    let pi = 0;
+    while (bits.length < capBits) push(padBytes[pi++ % 2], 8);
+
+    const cw = [];
+    for (let i = 0; i < cap; i++){
+      let v = 0;
+      for (let j = 0; j < 8; j++) v = (v << 1) | bits[i * 8 + j];
+      cw.push(v);
+    }
+    return cw;
+  }
+
+  /* ---- error correction + interleave ---- */
+  function buildFinal(dataCw, version){
+    const [ecPer, groups] = BLOCKS[version];
+    const blocks = [];
+    let idx = 0;
+    for (const [numBlocks, dataPer] of groups){
+      for (let b = 0; b < numBlocks; b++){
+        const data = dataCw.slice(idx, idx + dataPer);
+        idx += dataPer;
+        blocks.push({ data, ec: rsRemainder(data, rsGenPoly(ecPer)) });
+      }
+    }
+    const maxData = Math.max(...blocks.map(b => b.data.length));
+    const out = [];
+    for (let i = 0; i < maxData; i++)
+      for (const b of blocks) if (i < b.data.length) out.push(b.data[i]);
+    for (let i = 0; i < ecPer; i++)
+      for (const b of blocks) out.push(b.ec[i]);
+    return out;
+  }
+
+  /* ---- matrix ---- */
+  function makeMatrix(version, codewords, mask){
+    const size = version * 4 + 17;
+    const m   = Array.from({length:size}, () => new Array(size).fill(0));
+    const res = Array.from({length:size}, () => new Array(size).fill(false));
+
+    /* finder patterns + separators */
+    for (const [r0, c0] of [[0,0],[0,size-7],[size-7,0]]){
+      for (let r = -1; r <= 7; r++){
+        for (let c = -1; c <= 7; c++){
+          const rr = r0 + r, cc = c0 + c;
+          if (rr < 0 || rr >= size || cc < 0 || cc >= size) continue;
+          let val = 0;
+          if (r >= 0 && r <= 6 && c >= 0 && c <= 6){
+            val = ((r===0||r===6||c===0||c===6) || (r>=2&&r<=4&&c>=2&&c<=4)) ? 1 : 0;
+          }
+          m[rr][cc] = val;
+          res[rr][cc] = true;
         }
+      }
+    }
 
-        // Screen navigation
-        function showScreen(screenId) {
-            document.querySelectorAll('.screen').forEach(screen => {
-                screen.classList.remove('active');
-            });
-            document.getElementById(screenId).classList.add('active');
+    /* timing patterns */
+    for (let i = 8; i < size - 8; i++){
+      if (!res[6][i]){ m[6][i] = (i % 2 === 0) ? 1 : 0; res[6][i] = true; }
+      if (!res[i][6]){ m[i][6] = (i % 2 === 0) ? 1 : 0; res[i][6] = true; }
+    }
+
+    /* alignment patterns */
+    const ap = ALIGN[version];
+    for (const r of ap){
+      for (const c of ap){
+        if ((r <= 8 && c <= 8) || (r <= 8 && c >= size-9) || (r >= size-9 && c <= 8)) continue;
+        for (let dr = -2; dr <= 2; dr++){
+          for (let dc = -2; dc <= 2; dc++){
+            const dark = Math.max(Math.abs(dr), Math.abs(dc)) !== 1;
+            m[r+dr][c+dc] = dark ? 1 : 0;
+            res[r+dr][c+dc] = true;
+          }
         }
+      }
+    }
 
-        // Initialize local media
-        async function initializeMedia() {
-            try {
-                localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-                console.log('Microphone access granted');
-                return true;
-            } catch (error) {
-                console.error('Error accessing media devices:', error);
-                alert('Please allow microphone access to make calls');
-                return false;
-            }
+    /* dark module */
+    m[size-8][8] = 1;
+    res[size-8][8] = true;
+
+    /* reserve format info areas (skip timing intersections) */
+    for (let i = 0; i <= 8; i++){
+      if (i !== 6){ res[8][i] = true; res[i][8] = true; }
+    }
+    for (let i = 0; i < 8; i++) res[8][size-1-i] = true;
+    for (let i = 0; i < 7; i++) res[size-1-i][8] = true;
+
+    /* reserve version info areas */
+    if (version >= 7){
+      for (let i = 0; i < 6; i++)
+        for (let j = 0; j < 3; j++){
+          res[size-11+j][i] = true;
+          res[i][size-11+j] = true;
         }
+    }
 
-        // Create Peer Connection
-        function createPeerConnection() {
-            peerConnection = new RTCPeerConnection(peerConnectionConfig);
-            
-            // Add local stream
-            if (localStream) {
-                localStream.getTracks().forEach(track => {
-                    peerConnection.addTrack(track, localStream);
-                });
-            }
+    /* place data bits in zigzag */
+    const bits = [];
+    for (const cw of codewords)
+      for (let i = 7; i >= 0; i--) bits.push((cw >> i) & 1);
 
-            // Handle ICE candidates
-            peerConnection.onicecandidate = (event) => {
-                if (event.candidate && activeCallData) {
-                    database.ref('calls/' + activeCallData.targetNumber + '/' + activeCallData.callId + '/iceCandidates').push({
-                        candidate: event.candidate,
-                        from: currentUserNumber
-                    });
-                }
-            };
-
-            // Handle remote stream
-            peerConnection.ontrack = (event) => {
-                // Create audio element for remote stream
-                const remoteAudio = new Audio();
-                remoteAudio.srcObject = event.streams[0];
-                remoteAudio.play();
-                console.log('Remote stream received');
-            };
-
-            return peerConnection;
+    let bi = 0, up = true;
+    for (let col = size - 1; col > 0; col -= 2){
+      if (col === 6) col = 5;
+      for (let i = 0; i < size; i++){
+        const row = up ? size - 1 - i : i;
+        for (let k = 0; k < 2; k++){
+          const cc = col - k;
+          if (!res[row][cc]){
+            m[row][cc] = bi < bits.length ? bits[bi] : 0;
+            bi++;
+          }
         }
+      }
+      up = !up;
+    }
 
-        // Register
-        async function register() {
-            const email = document.getElementById('regEmail').value;
-            const password = document.getElementById('regPassword').value;
-            const name = document.getElementById('regName').value;
-            const errorElement = document.getElementById('regError');
-
-            if (!email || !password || !name) {
-                errorElement.textContent = 'Please fill all fields';
-                errorElement.style.display = 'block';
-                return;
-            }
-
-            try {
-                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-                const user = userCredential.user;
-                
-                let uniqueNumber = generateUniqueNumber();
-                
-                const numberSnapshot = await database.ref('numbers/' + uniqueNumber).once('value');
-                while (numberSnapshot.exists()) {
-                    uniqueNumber = generateUniqueNumber();
-                }
-
-                await database.ref('users/' + user.uid).set({
-                    email: email,
-                    name: name,
-                    uniqueNumber: uniqueNumber,
-                    createdAt: firebase.database.ServerValue.TIMESTAMP
-                });
-
-                await database.ref('numbers/' + uniqueNumber).set({
-                    userId: user.uid,
-                    name: name
-                });
-
-                const mediaReady = await initializeMedia();
-                if (!mediaReady) {
-                    alert('Microphone access is required for calls');
-                }
-
-                alert('Registration successful! Your number is: ' + uniqueNumber);
-                showScreen('mainScreen');
-                loadMainScreen(user);
-            } catch (error) {
-                errorElement.textContent = error.message;
-                errorElement.style.display = 'block';
-            }
+    /* mask */
+    for (let r = 0; r < size; r++){
+      for (let c = 0; c < size; c++){
+        if (res[r][c]) continue;
+        let inv = false;
+        switch (mask){
+          case 0: inv = (r + c) % 2 === 0; break;
+          case 1: inv = r % 2 === 0; break;
+          case 2: inv = c % 3 === 0; break;
+          case 3: inv = (r + c) % 3 === 0; break;
+          case 4: inv = (Math.floor(r/2) + Math.floor(c/3)) % 2 === 0; break;
+          case 5: inv = ((r*c) % 2) + ((r*c) % 3) === 0; break;
+          case 6: inv = (((r*c) % 2) + ((r*c) % 3)) % 2 === 0; break;
+          case 7: inv = (((r+c) % 2) + ((r*c) % 3)) % 2 === 0; break;
         }
+        if (inv) m[r][c] ^= 1;
+      }
+    }
 
-        // Login
-        async function login() {
-            const email = document.getElementById('loginEmail').value;
-            const password = document.getElementById('loginPassword').value;
-            const errorElement = document.getElementById('loginError');
+    /* format info — EC level M = 0b00 */
+    const fmtData = (0b00 << 3) | mask;
+    let fmtRem = fmtData << 10;
+    for (let i = 14; i >= 10; i--)
+      if ((fmtRem >> i) & 1) fmtRem ^= 0x537 << (i - 10);
+    const fmt = ((fmtData << 10) | fmtRem) ^ 0x5412;
 
-            if (!email || !password) {
-                errorElement.textContent = 'Please fill all fields';
-                errorElement.style.display = 'block';
-                return;
-            }
+    for (let i = 0; i < 15; i++){
+      const bit = (fmt >> i) & 1;
+      if (i < 6) m[8][i] = bit;
+      else if (i === 6) m[8][7] = bit;
+      else if (i === 7) m[8][8] = bit;
+      else if (i === 8) m[7][8] = bit;
+      else m[14 - i][8] = bit;
 
-            try {
-                const userCredential = await auth.signInWithEmailAndPassword(email, password);
-                const mediaReady = await initializeMedia();
-                if (!mediaReady) {
-                    alert('Microphone access is required for calls');
-                }
-                showScreen('mainScreen');
-                loadMainScreen(userCredential.user);
-            } catch (error) {
-                errorElement.textContent = error.message;
-                errorElement.style.display = 'block';
-            }
+      if (i < 7) m[size-1-i][8] = bit;
+      else m[8][size-15+i] = bit;
+    }
+
+    /* version info (v7+) */
+    if (version >= 7){
+      let vRem = version << 12;
+      for (let i = 17; i >= 12; i--)
+        if ((vRem >> i) & 1) vRem ^= 0x1F25 << (i - 12);
+      const vinfo = (version << 12) | vRem;
+      for (let i = 0; i < 18; i++){
+        const bit = (vinfo >> i) & 1;
+        const row = Math.floor(i / 3), col = i % 3;
+        m[row][size-11+col] = bit;
+        m[size-11+col][row] = bit;
+      }
+    }
+
+    return m;
+  }
+
+  /* ---- mask penalty ---- */
+  function penalty(m){
+    const size = m.length;
+    let score = 0;
+
+    for (let r = 0; r < size; r++){
+      let run = 1;
+      for (let c = 1; c < size; c++){
+        if (m[r][c] === m[r][c-1]) run++;
+        else { if (run >= 5) score += run - 2; run = 1; }
+      }
+      if (run >= 5) score += run - 2;
+    }
+    for (let c = 0; c < size; c++){
+      let run = 1;
+      for (let r = 1; r < size; r++){
+        if (m[r][c] === m[r-1][c]) run++;
+        else { if (run >= 5) score += run - 2; run = 1; }
+      }
+      if (run >= 5) score += run - 2;
+    }
+    for (let r = 0; r < size - 1; r++)
+      for (let c = 0; c < size - 1; c++){
+        const v = m[r][c];
+        if (m[r][c+1] === v && m[r+1][c] === v && m[r+1][c+1] === v) score += 3;
+      }
+
+    const p1 = [1,0,1,1,1,0,1,0,0,0,0], p2 = [0,0,0,0,1,0,1,1,1,0,1];
+    const scan = arr => {
+      for (let i = 0; i + 11 <= arr.length; i++){
+        let a = true, b = true;
+        for (let j = 0; j < 11; j++){
+          if (arr[i+j] !== p1[j]) a = false;
+          if (arr[i+j] !== p2[j]) b = false;
         }
+        if (a || b) score += 40;
+      }
+    };
+    for (let r = 0; r < size; r++) scan(m[r]);
+    for (let c = 0; c < size; c++) scan(m.map(row => row[c]));
 
-        // Load main screen
-        async function loadMainScreen(user) {
-            currentUser = user;
-            
-            const userSnapshot = await database.ref('users/' + user.uid).once('value');
-            const userData = userSnapshot.val();
-            
-            if (userData) {
-                currentUserNumber = userData.uniqueNumber;
-                document.getElementById('userName').textContent = userData.name;
-                document.getElementById('userNumber').textContent = currentUserNumber;
-                
-                listenForIncomingCalls();
-            }
+    let dark = 0;
+    for (const row of m) for (const v of row) if (v) dark++;
+    score += Math.floor(Math.abs(dark * 100 / (size * size) - 50) / 5) * 10;
+    return score;
+  }
+
+  /* ---- public ---- */
+  function generate(text){
+    const len = new TextEncoder().encode(text).length;
+    let version = 0;
+    for (let v = 1; v <= 10; v++){
+      const overhead = (v < 10) ? 2 : 3;         // mode(4b) + count(8b/16b)
+      if (len + overhead <= dataCapacity(v)){ version = v; break; }
+    }
+    if (!version) throw new Error('Data too long for QR (max ~200 characters)');
+
+    const dataCw  = buildCodewords(text, version);
+    const finalCw = buildFinal(dataCw, version);
+
+    let best = null, bestScore = Infinity;
+    for (let mask = 0; mask < 8; mask++){
+      const m = makeMatrix(version, finalCw, mask);
+      const s = penalty(m);
+      if (s < bestScore){ bestScore = s; best = m; }
+    }
+    return best;
+  }
+
+  return { generate };
+})();
+</script>
+
+<!-- QR scanner (only used by the camera tab) -->
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+
+<script>
+/* =========================================================
+   FuelPass — app logic
+   ========================================================= */
+
+const $  = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+/* short, URL-safe id */
+const uid = p => p + Date.now().toString(36).slice(-5) + Math.random().toString(36).slice(2, 5);
+
+/* ---------- demo signature (NOT real crypto) ---------- */
+const SECRET = 'fuelpass-demo-secret-v1';
+function hash(str){
+  let h1 = 0x811c9dc5, h2 = 0x1000193;
+  for (let i = 0; i < str.length; i++){
+    const c = str.charCodeAt(i);
+    h1 = Math.imul(h1 ^ c, 16777619) >>> 0;
+    h2 = Math.imul(h2 + c, 2246822519) >>> 0;
+    h2 = (h2 ^ (h2 >>> 13)) >>> 0;
+  }
+  return (h1 >>> 0).toString(16).padStart(8,'0') + (h2 >>> 0).toString(16).padStart(8,'0');
+}
+const sign = body => hash(SECRET + '|' + body + '|' + SECRET);
+
+/* ---------- base64url ---------- */
+function b64e(str){
+  const bytes = new TextEncoder().encode(str);
+  let bin = '';
+  bytes.forEach(b => bin += String.fromCharCode(b));
+  return btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+}
+function b64d(str){
+  const s = str.replace(/-/g,'+').replace(/_/g,'/');
+  const padded = s + '='.repeat((4 - s.length % 4) % 4);
+  const bin = atob(padded);
+  const bytes = Uint8Array.from(bin, c => c.charCodeAt(0));
+  return new TextDecoder().decode(bytes);
+}
+
+/* ---------- ISO week ---------- */
+function weekKey(d = new Date()){
+  const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const day = t.getUTCDay() || 7;
+  t.setUTCDate(t.getUTCDate() + 4 - day);
+  const yearStart = new Date(Date.UTC(t.getUTCFullYear(), 0, 1));
+  const week = Math.ceil((((t - yearStart) / 86400000) + 1) / 7);
+  return t.getUTCFullYear() + '-W' + String(week).padStart(2,'0');
+}
+const currentWeek = () => weekKey(new Date());
+
+/* ---------- storage ---------- */
+const K = { veh:'fuelpass.vehicles.v1', tx:'fuelpass.tx.v1' };
+const read  = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k)); return v ?? d; } catch(e){ return d; } };
+const write = (k, v) => localStorage.setItem(k, JSON.stringify(v));
+
+let vehicles = read(K.veh, []);
+let txs      = read(K.tx, []);
+
+if (!vehicles.length){
+  vehicles = [{ id: uid('V'), reg:'CAB-1234', owner:'A. Perera', type:'Car', quota:30 }];
+  write(K.veh, vehicles);
+}
+
+/* ---------- token ---------- */
+function makeToken(v){
+  const payload = { v:1, id:v.id, reg:v.reg, w:currentWeek(), q:v.quota };
+  const body = b64e(JSON.stringify(payload));
+  return 'FP1.' + body + '.' + sign(body);
+}
+function parseToken(tok){
+  const parts = String(tok).trim().split('.');
+  if (parts.length !== 3 || parts[0] !== 'FP1') throw new Error('Unrecognised pass format');
+  const body = parts[1], sig = parts[2];
+  if (sign(body) !== sig) throw new Error('Invalid signature — this pass is not authentic');
+  let p;
+  try { p = JSON.parse(b64d(body)); } catch(e){ throw new Error('Corrupted pass data'); }
+  return p;
+}
+
+/* ---------- quota math ---------- */
+const usedLiters = (id, week = currentWeek()) =>
+  txs.filter(t => t.vehicleId === id && t.week === week).reduce((a,b) => a + b.liters, 0);
+const remainingFor = (v, week = currentWeek()) => Math.max(0, v.quota - usedLiters(v.id, week));
+
+/* ---------- messages ---------- */
+function flash(id, text, kind){
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = text;
+  el.className = 'msg show ' + (kind || 'ok');
+  clearTimeout(el._t);
+  el._t = setTimeout(() => { el.className = 'msg'; }, 6000);
+}
+
+/* =========================================================
+   RENDER
+   ========================================================= */
+function renderWeekLabel(){ $('#weekLabel').textContent = currentWeek(); }
+
+function drawQR(text){
+  const canvas = $('#qrCanvas');
+  const ctx = canvas.getContext('2d');
+  try {
+    const m = QR.generate(text);
+    const n = m.length, quiet = 4, total = n + quiet * 2;
+    const scale = Math.max(2, Math.floor(320 / total));
+    canvas.width  = total * scale;
+    canvas.height = total * scale;
+
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#0b1220';
+    for (let r = 0; r < n; r++)
+      for (let c = 0; c < n; c++)
+        if (m[r][c])
+          ctx.fillRect((c + quiet) * scale, (r + quiet) * scale, scale, scale);
+  } catch (e){
+    canvas.width = 260; canvas.height = 260;
+    ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, 260, 260);
+    ctx.fillStyle = '#b91c1c';
+    ctx.font = '13px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Cannot render QR', 130, 120);
+    ctx.fillText(e.message, 130, 142);
+  }
+}
+
+function renderPass(){
+  const sel = $('#passVehicle');
+  const prev = sel.value;
+
+  if (!vehicles.length){
+    sel.innerHTML = '<option>No vehicles</option>';
+    $('#passInfo').innerHTML = '<p class="empty">Register a vehicle first.</p>';
+    $('#tokenText').textContent = '';
+    const c = $('#qrCanvas').getContext('2d');
+    c.clearRect(0, 0, $('#qrCanvas').width, $('#qrCanvas').height);
+    return;
+  }
+
+  sel.innerHTML = vehicles.map(v =>
+    `<option value="${v.id}">${esc(v.reg)} — ${esc(v.owner)}</option>`).join('');
+  if (prev && vehicles.some(v => v.id === prev)) sel.value = prev;
+
+  const v = vehicles.find(x => x.id === sel.value) || vehicles[0];
+  const used = usedLiters(v.id);
+  const rem  = Math.max(0, v.quota - used);
+  const pct  = v.quota > 0 ? (rem / v.quota) * 100 : 0;
+  const fill = pct > 50 ? 'ok-fill' : pct > 20 ? 'warn-fill' : 'bad-fill';
+
+  $('#passInfo').innerHTML = `
+    <div class="stat-row"><span>Owner</span><span>${esc(v.owner)}</span></div>
+    <div class="stat-row"><span>Type</span><span>${esc(v.type)}</span></div>
+    <div class="stat-row"><span>Weekly quota</span><span>${v.quota} L</span></div>
+    <div class="stat-row"><span>Used this week</span><span>${used.toFixed(1)} L</span></div>
+    <div class="stat-row"><span>Remaining</span><span style="color:#7ee2a8">${rem.toFixed(1)} L</span></div>
+    <div class="bar"><div class="bar-fill ${fill}" style="width:${pct}%"></div></div>
+  `;
+
+  const token = makeToken(v);
+  $('#tokenText').textContent = token;
+  drawQR(token);
+}
+
+function renderVehicles(){
+  const box = $('#vehicleList');
+  if (!vehicles.length){
+    box.innerHTML = '<p class="empty">No vehicles registered yet.</p>';
+    return;
+  }
+  box.innerHTML = vehicles.map(v => {
+    const rem = remainingFor(v);
+    const cls = rem <= 0 ? 'bad' : rem < v.quota * 0.3 ? 'warn' : 'ok';
+    return `<div class="list-item">
+      <div>
+        <div class="strong">${esc(v.reg)}</div>
+        <div class="muted small">${esc(v.owner)} · ${esc(v.type)} · ${v.quota} L/week</div>
+      </div>
+      <div class="right">
+        <span class="pill ${cls}">${rem.toFixed(1)} L left</span>
+        <button class="btn tiny danger" data-del="${v.id}">Delete</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderRecords(){
+  $('#recCount').textContent = txs.length;
+  const box = $('#recordsBody');
+  if (!txs.length){
+    box.innerHTML = '<p class="empty">No fuel has been dispensed yet.</p>';
+    return;
+  }
+  const rows = [...txs].sort((a,b) => b.at - a.at).map(t => `
+    <tr>
+      <td>${esc(t.reg)}</td>
+      <td>${t.liters.toFixed(1)} L</td>
+      <td>${esc(t.week)}</td>
+      <td>${esc(t.station)}</td>
+      <td class="muted small">${new Date(t.at).toLocaleString()}</td>
+    </tr>`).join('');
+  box.innerHTML = `<table>
+    <thead><tr><th>Vehicle</th><th>Litres</th><th>Week</th><th>Station</th><th>Time</th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table>`;
+}
+
+function renderAll(){
+  renderWeekLabel();
+  renderPass();
+  renderVehicles();
+  renderRecords();
+}
+
+/* =========================================================
+   SCAN / VERIFY / DISPENSE
+   ========================================================= */
+let verified = null;
+
+function handleToken(token){
+  try {
+    const p = parseToken(token);
+    const v = vehicles.find(x => x.id === p.id);
+    if (!v) throw new Error('This vehicle is not registered in the system');
+    if (p.reg !== v.reg) throw new Error('Pass does not match the vehicle record');
+    if (p.w !== currentWeek())
+      throw new Error(`Pass is for week ${p.w} — current week is ${currentWeek()}`);
+    if (p.q !== v.quota)
+      throw new Error('Quota was changed — please regenerate the pass');
+
+    verified = { vehicle: v, week: p.w, quota: v.quota, remaining: remainingFor(v, p.w) };
+    renderDispense();
+    flash('scanMsg', `✔ Valid pass for ${v.reg}`, 'ok');
+  } catch (e){
+    verified = null;
+    renderDispense();
+    flash('scanMsg', '✖ ' + e.message, 'bad');
+  }
+}
+
+function renderDispense(){
+  const box = $('#dispenseBody');
+  if (!verified){
+    box.innerHTML = '<p class="empty">Scan a pass to begin.</p>';
+    return;
+  }
+  const v = verified.vehicle;
+  const rem = verified.remaining;
+  const exhausted = rem <= 0.001;
+
+  box.innerHTML = `
+    <div class="stat-row"><span>Vehicle</span><span>${esc(v.reg)}</span></div>
+    <div class="stat-row"><span>Owner</span><span>${esc(v.owner)}</span></div>
+    <div class="stat-row"><span>Week</span><span>${esc(verified.week)}</span></div>
+    <div class="stat-row"><span>Weekly quota</span><span>${verified.quota} L</span></div>
+    <div class="stat-row"><span>Remaining</span>
+      <span style="color:${exhausted ? '#fca5a5' : '#7ee2a8'}">${rem.toFixed(1)} L</span></div>
+
+    ${exhausted ? '<p class="msg bad show" style="margin-top:12px">Quota already fully used for this week.</p>' : ''}
+
+    <label for="liters">Litres to dispense</label>
+    <input id="liters" type="number" min="0.1" step="0.1" value="${exhausted ? 0 : rem.toFixed(1)}"
+           ${exhausted ? 'disabled' : ''} />
+    <label for="station">Station</label>
+    <input id="station" value="City Fuel Station" />
+    <div class="row">
+      <button class="btn" id="btnDispense" ${exhausted ? 'disabled' : ''}>Mark as dispensed</button>
+      <button class="btn ghost" id="btnFill" ${exhausted ? 'disabled' : ''}>Use full remaining</button>
+    </div>
+    <div class="msg" id="dispMsg"></div>
+  `;
+
+  const fillBtn = $('#btnFill');
+  if (fillBtn) fillBtn.onclick = () => { $('#liters').value = rem.toFixed(1); };
+  const dBtn = $('#btnDispense');
+  if (dBtn) dBtn.onclick = doDispense;
+}
+
+function doDispense(){
+  if (!verified) return;
+  const liters = parseFloat($('#liters').value);
+  if (!(liters > 0)) return flash('dispMsg', 'Enter a valid amount', 'bad');
+  if (liters > verified.remaining + 1e-9)
+    return flash('dispMsg', `Exceeds remaining quota (${verified.remaining.toFixed(1)} L)`, 'bad');
+
+  txs.push({
+    id: uid('T'),
+    vehicleId: verified.vehicle.id,
+    reg: verified.vehicle.reg,
+    week: verified.week,
+    liters: Math.round(liters * 100) / 100,
+    station: ($('#station').value || '').trim() || '—',
+    at: Date.now()
+  });
+  write(K.tx, txs);
+
+  verified.remaining = Math.max(0, verified.remaining - liters);
+  renderDispense();
+  renderPass();
+  renderVehicles();
+  renderRecords();
+  flash('dispMsg',
+    `✔ Dispensed ${liters.toFixed(1)} L — ${verified.remaining.toFixed(1)} L left this week.`, 'ok');
+}
+
+/* ---------- camera ---------- */
+let camStream = null, rafId = null;
+
+async function startScan(){
+  if (typeof jsQR === 'undefined')
+    return flash('scanMsg', 'Scanner library not loaded (no internet?) — paste the token manually instead.', 'bad');
+
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia)
+    return flash('scanMsg', 'Camera API unavailable. Serve this page over https or localhost.', 'bad');
+
+  try {
+    camStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: 'environment' } }, audio: false
+    });
+  } catch (e){
+    return flash('scanMsg', 'Camera unavailable: ' + e.message + ' (try https or localhost)', 'bad');
+  }
+
+  const video = $('#video');
+  video.srcObject = camStream;
+  await video.play();
+  $('#camOff').style.display = 'none';
+  $('#camFrame').style.display = 'block';
+
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+  const tick = () => {
+    if (!camStream) return;
+    if (video.readyState === video.HAVE_ENOUGH_DATA){
+      const w = video.videoWidth, h = video.videoHeight;
+      if (w && h){
+        canvas.width = w; canvas.height = h;
+        ctx.drawImage(video, 0, 0, w, h);
+        const img = ctx.getImageData(0, 0, w, h);
+        const code = jsQR(img.data, img.width, img.height, { inversionAttempts: 'dontInvert' });
+        if (code && code.data){
+          handleToken(code.data);
+          stopScan();
+          return;
         }
+      }
+    }
+    rafId = requestAnimationFrame(tick);
+  };
+  rafId = requestAnimationFrame(tick);
+}
 
-        // Listen for incoming calls
-        function listenForIncomingCalls() {
-            if (incomingCallRef) {
-                database.ref('calls/' + currentUserNumber).off();
-            }
-            
-            incomingCallRef = database.ref('calls/' + currentUserNumber);
-            incomingCallRef.on('child_added', (snapshot) => {
-                const callData = snapshot.val();
-                if (callData && callData.status === 'ringing') {
-                    showIncomingCall(callData.from, callData.callerName, snapshot.key);
-                }
-            });
-        }
+function stopScan(){
+  if (rafId) cancelAnimationFrame(rafId);
+  rafId = null;
+  if (camStream){
+    camStream.getTracks().forEach(t => t.stop());
+    camStream = null;
+  }
+  const video = $('#video');
+  if (video) video.srcObject = null;
+  $('#camOff').style.display = 'grid';
+  $('#camFrame').style.display = 'none';
+}
 
-        // Show incoming call
-        function showIncomingCall(fromNumber, callerName, callId) {
-            document.getElementById('callerNumber').textContent = fromNumber + ' (' + callerName + ')';
-            document.getElementById('incomingCall').classList.add('active');
-            document.getElementById('incomingCall').dataset.callId = callId;
-            document.getElementById('incomingCall').dataset.fromNumber = fromNumber;
-            document.getElementById('dialerSection').style.display = 'none';
-        }
+/* =========================================================
+   EVENTS
+   ========================================================= */
+$$('.tab').forEach(btn => btn.onclick = () => {
+  $$('.tab').forEach(b => b.classList.remove('active'));
+  $$('.panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  $('#tab-' + btn.dataset.tab).classList.add('active');
+  if (btn.dataset.tab !== 'scan') stopScan();
+});
 
-        // Answer call
-        async function answerCall() {
-            const callId = document.getElementById('incomingCall').dataset.callId;
-            const fromNumber = document.getElementById('incomingCall').dataset.fromNumber;
-            
-            document.getElementById('incomingCall').classList.remove('active');
-            
-            // Create peer connection
-            createPeerConnection();
-            
-            // Listen for offer from caller
-            const offerRef = database.ref('calls/' + currentUserNumber + '/' + callId + '/offer');
-            offerRef.on('value', async (snapshot) => {
-                const offer = snapshot.val();
-                if (offer && peerConnection) {
-                    await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
-                    const answer = await peerConnection.createAnswer();
-                    await peerConnection.setLocalDescription(answer);
-                    
-                    // Send answer
-                    await database.ref('calls/' + currentUserNumber + '/' + callId + '/answer').set({
-                        sdp: answer,
-                        from: currentUserNumber
-                    });
-                }
-            });
+$('#passVehicle').onchange = renderPass;
 
-            // Listen for ICE candidates
-            database.ref('calls/' + currentUserNumber + '/' + callId + '/iceCandidates').on('child_added', async (snapshot) => {
-                const data = snapshot.val();
-                if (data && data.from !== currentUserNumber && peerConnection) {
-                    await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
-                }
-            });
+$('#btnCopy').onclick = async () => {
+  const t = $('#tokenText').textContent;
+  if (!t) return;
+  try { await navigator.clipboard.writeText(t); flash('scanMsg', 'Token copied', 'ok'); }
+  catch(e){ alert('Copy failed — please select the token text manually.'); }
+};
 
-            // Update call status
-            await database.ref('calls/' + currentUserNumber + '/' + callId).update({
-                status: 'answered'
-            });
+$('#btnPng').onclick = () => {
+  try {
+    const a = document.createElement('a');
+    a.download = 'fuelpass-' + currentWeek() + '.png';
+    a.href = $('#qrCanvas').toDataURL('image/png');
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  } catch(e){ alert('Could not export PNG: ' + e.message); }
+};
 
-            // Show active call screen
-            startActiveCall(fromNumber, callId, true);
-        }
+$('#btnPrint').onclick = () => {
+  try {
+    const url = $('#qrCanvas').toDataURL('image/png');
+    const token = $('#tokenText').textContent;
+    const w = window.open('', '_blank');
+    if (!w){ alert('Pop-up blocked — use “Download PNG” instead.'); return; }
+    w.document.open();
+    w.document.write(
+      '<html><head><title>FuelPass ' + currentWeek() + '</title></head>' +
+      '<body style="font-family:sans-serif;text-align:center;padding:40px">' +
+      '<h2>FuelPass — ' + currentWeek() + '</h2>' +
+      '<img src="' + url + '" style="width:300px" />' +
+      '<p style="font-size:12px;word-break:break-all;max-width:340px;margin:16px auto">' + token + '</p>' +
+      '</body></html>');
+    w.document.close();
+    w.focus();
+    setTimeout(() => { try { w.print(); } catch(e){} }, 300);
+  } catch(e){ alert('Print failed — use “Download PNG” instead.'); }
+};
 
-        // Reject call
-        async function rejectCall() {
-            const callId = document.getElementById('incomingCall').dataset.callId;
-            
-            await database.ref('calls/' + currentUserNumber + '/' + callId).update({
-                status: 'rejected'
-            });
-            
-            document.getElementById('incomingCall').classList.remove('active');
-            document.getElementById('dialerSection').style.display = 'block';
-            
-            setTimeout(() => {
-                database.ref('calls/' + currentUserNumber + '/' + callId).remove();
-            }, 1000);
-        }
+$('#btnScan').onclick = startScan;
+$('#btnStopScan').onclick = stopScan;
+$('#btnManual').onclick = () => {
+  const t = $('#manualToken').value.trim();
+  if (!t) return flash('scanMsg', 'Paste a token first', 'bad');
+  handleToken(t);
+};
 
-        // Start active call display
-        function startActiveCall(remoteNumber, callId, isIncoming) {
-            activeCallData = {
-                targetNumber: remoteNumber,
-                callId: callId,
-                isIncoming: isIncoming
-            };
+/* vehicles */
+$('#btnAddVehicle').onclick = () => {
+  const reg = $('#vReg').value.trim().toUpperCase();
+  const owner = $('#vOwner').value.trim();
+  const type = $('#vType').value;
+  const quota = parseFloat($('#vQuota').value);
 
-            document.getElementById('activeCallNumber').textContent = remoteNumber;
-            document.getElementById('activeCall').classList.add('active');
-            document.getElementById('dialerSection').style.display = 'none';
-            
-            // Start timer
-            callStartTime = Date.now();
-            updateCallTimer();
-            callTimerInterval = setInterval(updateCallTimer, 1000);
-        }
+  if (!reg) return flash('vehMsg', 'Registration number is required', 'bad');
+  if (!owner) return flash('vehMsg', 'Owner name is required', 'bad');
+  if (!(quota > 0)) return flash('vehMsg', 'Quota must be greater than 0', 'bad');
+  if (vehicles.some(v => v.reg === reg)) return flash('vehMsg', 'That vehicle is already registered', 'bad');
 
-        // Update call timer
-        function updateCallTimer() {
-            if (callStartTime) {
-                const elapsed = Math.floor((Date.now() - callStartTime) / 1000);
-                const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
-                const seconds = (elapsed % 60).toString().padStart(2, '0');
-                document.getElementById('callTimer').textContent = minutes + ':' + seconds;
-            }
-        }
+  vehicles.push({ id: uid('V'), reg, owner, type, quota });
+  write(K.veh, vehicles);
 
-        // End call
-        async function endCall() {
-            if (!activeCallData) return;
+  $('#vReg').value = ''; $('#vOwner').value = '';
+  flash('vehMsg', `✔ ${reg} registered with ${quota} L/week`, 'ok');
+  renderAll();
+};
 
-            // Close peer connection
-            if (peerConnection) {
-                peerConnection.close();
-                peerConnection = null;
-            }
+$('#vehicleList').onclick = e => {
+  const id = e.target.dataset && e.target.dataset.del;
+  if (!id) return;
+  const v = vehicles.find(x => x.id === id);
+  if (!v) return;
+  if (!confirm(`Delete ${v.reg}? Its pass will stop working.`)) return;
+  vehicles = vehicles.filter(x => x.id !== id);
+  write(K.veh, vehicles);
+  if (verified && verified.vehicle.id === id){ verified = null; renderDispense(); }
+  renderAll();
+};
 
-            // Stop timer
-            if (callTimerInterval) {
-                clearInterval(callTimerInterval);
-                callTimerInterval = null;
-            }
+/* records */
+$('#btnClearTx').onclick = () => {
+  if (!txs.length) return;
+  if (!confirm("Delete all dispense records? This resets everyone's weekly usage.")) return;
+  txs = [];
+  write(K.tx, txs);
+  verified = null;
+  renderDispense();
+  renderAll();
+};
 
-            // Calculate call duration
-            const duration = callStartTime ? Math.floor((Date.now() - callStartTime) / 1000) : 0;
-            const minutes = Math.floor(duration / 60);
-            const seconds = duration % 60;
-            const durationText = minutes + 'm ' + seconds + 's';
+/* auto-refresh when the week rolls over while the page is open */
+setInterval(() => {
+  if ($('#weekLabel').textContent !== currentWeek()){
+    verified = null;
+    renderDispense();
+    renderAll();
+  }
+}, 30000);
 
-            // Update Firebase
-            const callPath = activeCallData.isIncoming ? 
-                'calls/' + currentUserNumber + '/' + activeCallData.callId :
-                'calls/' + activeCallData.targetNumber + '/' + activeCallData.callId;
-
-            await database.ref(callPath).update({
-                status: 'ended',
-                duration: durationText,
-                endedBy: currentUserNumber
-            });
-
-            // Clean up
-            setTimeout(() => {
-                database.ref(callPath).remove();
-            }, 1000);
-
-            // Reset UI
-            document.getElementById('activeCall').classList.remove('active');
-            document.getElementById('dialerSection').style.display = 'block';
-            document.getElementById('callTimer').textContent = '00:00';
-            activeCallData = null;
-            callStartTime = null;
-
-            alert('Call ended. Duration: ' + durationText);
-        }
-
-        // Dialer functions
-        function addDigit(digit) {
-            const display = document.getElementById('dialDisplay');
-            display.textContent += digit;
-        }
-
-        function clearDisplay() {
-            document.getElementById('dialDisplay').textContent = '';
-        }
-
-        // Make call
-        async function makeCall() {
-            const targetNumber = document.getElementById('dialDisplay').textContent;
-            
-            if (!targetNumber) {
-                alert('Please enter a number');
-                return;
-            }
-
-            if (targetNumber === currentUserNumber) {
-                alert('You cannot call yourself');
-                return;
-            }
-
-            const numberSnapshot = await database.ref('numbers/' + targetNumber).once('value');
-            if (!numberSnapshot.exists()) {
-                alert('Number not found');
-                return;
-            }
-
-            const targetData = numberSnapshot.val();
-            const userSnapshot = await database.ref('users/' + currentUser.uid).once('value');
-            const userData = userSnapshot.val();
-
-            // Create call
-            const callRef = database.ref('calls/' + targetNumber).push();
-            const callId = callRef.key;
-
-            // Create peer connection
-            createPeerConnection();
-
-            // Create offer
-            const offer = await peerConnection.createOffer();
-            await peerConnection.setLocalDescription(offer);
-
-            await callRef.set({
-                from: currentUserNumber,
-                callerName: userData.name,
-                status: 'ringing',
-                offer: {
-                    sdp: offer,
-                    from: currentUserNumber
-                },
-                timestamp: firebase.database.ServerValue.TIMESTAMP
-            });
-
-            // Listen for answer
-            database.ref('calls/' + targetNumber + '/' + callId + '/answer').on('value', async (snapshot) => {
-                const answer = snapshot.val();
-                if (answer && peerConnection) {
-                    await peerConnection.setRemoteDescription(new RTCSessionDescription(answer.sdp));
-                    startActiveCall(targetNumber, callId, false);
-                }
-            });
-
-            // Listen for ICE candidates
-            database.ref('calls/' + targetNumber + '/' + callId + '/iceCandidates').on('child_added', async (snapshot) => {
-                const data = snapshot.val();
-                if (data && data.from !== currentUserNumber && peerConnection) {
-                    await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
-                }
-            });
-
-            // Listen for call status changes
-            database.ref('calls/' + targetNumber + '/' + callId + '/status').on('value', (snapshot) => {
-                const status = snapshot.val();
-                if (status === 'rejected') {
-                    alert('Call rejected');
-                    cleanupCall(targetNumber, callId);
-                } else if (status === 'ended') {
-                    alert('Call ended by remote user');
-                    cleanupCall(targetNumber, callId);
-                }
-            });
-
-            document.getElementById('dialerSection').style.display = 'none';
-            document.getElementById('activeCall').classList.add('active');
-            document.getElementById('activeCallNumber').textContent = targetNumber;
-            
-            // Start timer for ringing
-            callStartTime = Date.now();
-            updateCallTimer();
-            callTimerInterval = setInterval(updateCallTimer, 1000);
-
-            activeCallData = {
-                targetNumber: targetNumber,
-                callId: callId,
-                isIncoming: false
-            };
-
-            // Timeout after 30 seconds
-            setTimeout(() => {
-                if (activeCallData && activeCallData.callId === callId && !peerConnection) {
-                    cleanupCall(targetNumber, callId);
-                    alert('No answer from ' + targetNumber);
-                }
-            }, 30000);
-
-            clearDisplay();
-        }
-
-        // Cleanup call
-        function cleanupCall(targetNumber, callId) {
-            if (peerConnection) {
-                peerConnection.close();
-                peerConnection = null;
-            }
-
-            if (callTimerInterval) {
-                clearInterval(callTimerInterval);
-                callTimerInterval = null;
-            }
-
-            document.getElementById('activeCall').classList.remove('active');
-            document.getElementById('dialerSection').style.display = 'block';
-            document.getElementById('callTimer').textContent = '00:00';
-            activeCallData = null;
-            callStartTime = null;
-
-            database.ref('calls/' + targetNumber + '/' + callId).remove();
-        }
-
-        // Logout
-        function logout() {
-            if (activeCallData) {
-                endCall();
-            }
-            
-            if (incomingCallRef) {
-                database.ref('calls/' + currentUserNumber).off();
-            }
-
-            if (localStream) {
-                localStream.getTracks().forEach(track => track.stop());
-            }
-
-            auth.signOut();
-            currentUser = null;
-            currentUserNumber = null;
-            showScreen('loginScreen');
-        }
-
-        // Auth state listener
-        auth.onAuthStateChanged((user) => {
-            if (user) {
-                if (document.getElementById('mainScreen').classList.contains('active')) {
-                    loadMainScreen(user);
-                }
-            }
-        });
-
-        // Handle page unload
-        window.addEventListener('beforeunload', () => {
-            if (activeCallData) {
-                endCall();
-            }
-        });
-    </script>
+/* boot */
+renderAll();
+renderDispense();
+</script>
 </body>
 </html>
